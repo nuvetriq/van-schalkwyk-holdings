@@ -1,0 +1,14 @@
+VAN SCHALKWYK HOLDINGS — LIVE FRONT-END PACKAGE
+
+This package is prepared from the approved website design for deployment under the Nuvetriq hosting setup.
+
+Upload/extract the CONTENTS of this ZIP into the web root for vanschalkwykholdings.com.
+The homepage is index.html.
+
+Current status:
+- Main Van Schalkwyk Holdings site: live-ready front end.
+- Clever Cubs and Granny's Little Bakery public pages: live-ready front end.
+- Product/admin/payment/contact-form backends: not connected yet.
+- Admin placeholder pages are kept noindex/nofollow.
+
+The old duplicate vsh_v10 folder has been removed from this package.
