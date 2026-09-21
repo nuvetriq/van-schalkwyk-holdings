@@ -7,7 +7,7 @@ The homepage is index.html.
 
 Current status:
 - Main Van Schalkwyk Holdings site: live-ready front end.
-- Clever Cubs and Granny's Little Bakery public pages: live-ready front end.
+- Clever Cubs and Granny's public pages: live-ready front end.
 - Product/admin/payment/contact-form backends: not connected yet.
 - Admin placeholder pages are kept noindex/nofollow.
 
