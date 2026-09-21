@@ -1,0 +1,18 @@
+{
+  "name": "van-schalkwyk-holdings",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Van Schalkwyk Holdings website with secure product administration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check admin/admin.js && node --check assets/public-products.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}
