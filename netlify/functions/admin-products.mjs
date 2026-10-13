@@ -62,7 +62,8 @@ export default async function handler(request) {
         .sort((a,b) => b.updated_at.localeCompare(a.updated_at));
       // Public clients only receive the approved display fields.
       if (!admin) return json({ products: output.map(({ id, business, title, category, grade, description, price, image_path, is_active, updated_at, pdf_path }) => ({
-        id, business, title, category, grade, description, price, image_path, is_active, updated_at, has_pdf: Boolean(pdf_path)\n      })) });
+        id, business, title, category, grade, description, price, image_path, is_active, updated_at, has_pdf: Boolean(pdf_path)
+      })) });
       return json({ products: output });
     } catch (error) {
       console.error("Product read failed:", error);
