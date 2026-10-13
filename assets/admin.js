@@ -1,4 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+let createClient; // Loaded only after the public Supabase project details are configured.
 
 const config = window.VSH_ADMIN_CONFIG || {};
 const $ = id => document.getElementById(id);
@@ -10,7 +10,7 @@ const BUSINESSES = {
 const configured = Boolean(config.supabaseUrl && config.publishableKey && /^https:\/\//.test(config.supabaseUrl));
 let db;
 let currentUser = null;
-let business = sessionStorage.getItem("vsh-admin-business") || "grannys";
+let business = new URLSearchParams(location.search).get("business") || sessionStorage.getItem("vsh-admin-business") || "grannys";
 let products = [];
 let editingImagePath = "";
 let previewObjectUrl = null;
