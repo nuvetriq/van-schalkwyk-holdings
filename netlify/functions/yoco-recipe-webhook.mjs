@@ -3,6 +3,8 @@ import { checkoutStore, ordersStore, orderKey, checkoutKey, verifyYocoSignature,
 import { deliverRecipeOrder } from "../lib/recipe-delivery.mjs";
 export default async function handler(request) {
   if(request.method!=="POST")return json({error:"Method not allowed"},405);
+  if(process.env.VSH_ENABLE_PAYMENTS !== "true" || process.env.CONTEXT !== "production")
+    return json({error:"Digital book checkout is not enabled."},503);
   const raw=await request.text();
   if(raw.length>50000) return json({error:"Event too large"},413);
   if(!verifyYocoSignature(request,raw)) return json({error:"Invalid Yoco webhook signature"},401);
