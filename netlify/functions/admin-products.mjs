@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
-import { getStore } from "@netlify/blobs";
+import { openVSHStore } from "../lib/catalogue-store.mjs";
 import { authStatus, json, BUSINESSES } from "../lib/auth.mjs";
 
-const store = () => getStore({ name: "vsh-products", consistency: "strong" });
+const store = () => openVSHStore({ name: "vsh-products", consistency: "strong" });
 const uuidRE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function keyFor(business, id) { return business + "/" + id + ".json"; }
 function clean(value, maxLength) { return String(value ?? "").trim().slice(0, maxLength); }
@@ -92,13 +92,13 @@ export default async function handler(request) {
     // Also verify referenced private PDFs even when saving a draft to prevent
     // assigning invented paths to a product.
     if (payload.pdf_path) {
-      const pdfStore = getStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
+      const pdfStore = openVSHStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
       const metadata = await pdfStore.getMetadata(payload.pdf_path);
       if (!metadata) return json({ error: "The private PDF cannot be found. Please upload it again." }, 400);
     }
     // Image paths must point to an existing upload in the appropriate business.
     if (payload.image_path) {
-      const imgStore = getStore({ name: "vsh-product-images", consistency: "strong" });
+      const imgStore = openVSHStore({ name: "vsh-product-images", consistency: "strong" });
       if (!await imgStore.getMetadata(payload.image_path))
         return json({ error: "The product photo cannot be found. Please upload it again." }, 400);
     }
