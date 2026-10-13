@@ -17,7 +17,9 @@ export async function deliverRecipeOrder(id) {
   if(!locked || !locked.changed) return {sent:false,reason:"already_processed_or_processing"};
   const order=locked.order;
   try {
-    if(!process.env.RESEND_API_KEY || !process.env.VSH_RECIPE_EMAIL_FROM) throw Error("Email service not configured.");
+    const viaResend=Boolean(process.env.RESEND_API_KEY && process.env.VSH_RECIPE_EMAIL_FROM);
+    const viaGmail=Boolean(process.env.VSH_GMAIL_USER && process.env.VSH_GMAIL_APP_PASSWORD);
+    if(!viaResend && !viaGmail) throw Error("Email service not configured.");
     const pdfs=await Promise.all(order.items.map(i=>privatePDFStore().get(i.pdfPath,{type:"arrayBuffer"})));
     if(pdfs.some(p=>!p || p.byteLength<8 || p.byteLength>3*1024*1024))throw Error("A purchased PDF is missing or too large.");
     const totalSize=pdfs.reduce((n,p)=>n+p.byteLength,0);
@@ -34,25 +36,49 @@ export async function deliverRecipeOrder(id) {
       "Paid: R"+(order.amount/100).toFixed(2)+"\n\n"+
       "Happy baking,\nGranny's — Made with Love\n\n"+
       "Need help? Reply to this email.";
-    const response=await fetch("https://api.resend.com/emails",{
-      method:"POST",
-      headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json",
-        "Idempotency-Key":"grannys-recipe-"+order.id},
-      body:JSON.stringify({
-        from:process.env.VSH_RECIPE_EMAIL_FROM,
-        to:[order.email],
-        reply_to:process.env.VSH_RECIPE_REPLY_TO || undefined,
+    let messageId;
+    if(viaResend) {
+      const response=await fetch("https://api.resend.com/emails",{
+        method:"POST",
+        headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json",
+          "Idempotency-Key":"grannys-recipe-"+order.id},
+        body:JSON.stringify({
+          from:process.env.VSH_RECIPE_EMAIL_FROM,
+          to:[order.email],
+          reply_to:process.env.VSH_RECIPE_REPLY_TO || undefined,
+          subject:"Your Granny's recipe books are here! ❤️",
+          text:message,
+          attachments
+        })
+      });
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok || !result.id) throw Error("Email provider rejected delivery ("+response.status+")");
+      messageId=result.id;
+    } else {
+      const {default:nodemailer}=await import("nodemailer");
+      const transport=nodemailer.createTransport({
+        host:"smtp.gmail.com",port:465,secure:true,
+        auth:{user:process.env.VSH_GMAIL_USER,pass:process.env.VSH_GMAIL_APP_PASSWORD}
+      });
+      const result=await transport.sendMail({
+        from:`Granny's <${process.env.VSH_GMAIL_USER}>`,
+        to:order.email,
+        replyTo:process.env.VSH_RECIPE_REPLY_TO || process.env.VSH_GMAIL_USER,
         subject:"Your Granny's recipe books are here! ❤️",
         text:message,
-        attachments
-      })
-    });
-    const result=await response.json().catch(()=>({}));
-    if(!response.ok || !result.id) throw Error("Email provider rejected delivery ("+response.status+")");
+        attachments:pdfs.map((bytes,i)=>({
+          filename:safeFilename(order.items[i].title,i),
+          content:Buffer.from(bytes),
+          contentType:"application/pdf"
+        })),
+        headers:{"X-Grannys-Order-Reference":order.id}
+      });
+      messageId=result.messageId;
+    }
     await casOrder(id,latest=>{
       if(latest.delivery_token!==token || latest.email_status==="sent")return null;
       return {...latest,email_status:"sent",email_sent_at:new Date().toISOString(),
-        provider_message_id:result.id,updated_at:new Date().toISOString(),delivery_token:null};
+        provider_message_id:messageId,updated_at:new Date().toISOString(),delivery_token:null};
     });
     return {sent:true};
   } catch(error) {
