@@ -76,7 +76,16 @@
       create("p", "gr-recipe-card-description", product.description || "")
     );
     const footer = create("div", "gr-recipe-card-footer");
-    footer.append(create("b", "gr-recipe-card-price", money(product.price)), whatsappLink(product, true));
+    footer.append(create("b", "gr-recipe-card-price", money(product.price)));
+    if (product.has_pdf) {
+      const button = create("button", "gr-recipe-card-action gr-recipe-add", "Add to basket +");
+      button.type = "button";
+      button.dataset.recipeAdd = product.id;
+      button.setAttribute("aria-label", "Add " + product.title + " to basket");
+      footer.append(button);
+    } else {
+      footer.append(whatsappLink(product, true));
+    }
     body.append(footer);
     article.append(productPhoto(product, true), body);
     return article;
