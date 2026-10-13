@@ -1,26 +1,42 @@
-# Shared Van Schalkwyk Holdings admin — setup
+# Van Schalkwyk Holdings — Netlify master admin
 
-The new `admin.html` is a **single master login** with an in-dashboard business switcher for **Granny's** and **Clever Cubs**. It provides product create/edit/publish, optional image upload, category, size/grade, and prices. No ability to delete records is exposed.
+## What we've built
 
-## Current deployment status
+A separate link at `/admin.html` for the **one master administrator** to manage two business catalogues from one login.
 
-The interface and supporting SQL have been committed on `feature/unified-product-admin`, deliberately not deployed to `main`. **There is no functioning login until Supabase is configured.** Neither a password nor a Supabase secret/service-role key belongs in the repo.
+- **Granny's** — create/edit treats, description, category, size, prices and product pictures. Publish/unpublish. Publicly listed treats include a WhatsApp enquiry action.
+- **Clever Cubs Learning** — create/edit digital book product *listings* with covers, grade and prices. Publish/unpublish. The public cart **remains test-only**; payment and paid PDF delivery are **not enabled**.
+- The two legacy admin links redirect to the shared page, preserving old bookmarks.
+- Private admin key and all product modifications are validated server-side in Netlify Functions.
+- Product records and image files are stored in separate **Netlify Blobs** site-wide stores. No Supabase, Coolify or Xneelo required.
 
-## Connect the secure backend
+## Complete the activation in Netlify
 
-1. Create a Supabase project at https://supabase.com/dashboard and note its **Project URL** and **publishable / anon key** in Settings → API Keys. These are intended for browser use and do NOT grant administrative rights on their own.
-2. In SQL Editor, run `supabase/setup.sql`. This creates product and admin tables, row-level security (RLS) policies and a **public, images-only** bucket named `product-images`.
-3. Under Authentication → Users, create/invite the one master admin user with a strong unique password. For now, turn off public email/password registration (Auth → Providers/Settings as appropriate). Enable MFA when available.
-4. Run the final commented `insert into public.admin_users ...` statement from `setup.sql`, replacing the example email with the email of the account just created. Check that one row was inserted. This role is **assigned server-side**, never by a public registration form.
-5. In `assets/admin-config.js`, add the Supabase project URL and **publishable / anon key**. Do not add a service_role / secret key, database password or login password. RLS is what prevents outsiders from changing products.
-6. Test by opening `admin.html`: sign in, switch between the businesses, create an unpublished product, and then publish it. Published items are pulled from Supabase on both storefronts: Clever Cubs replaces the demo data when configured, while Granny’s renders a dedicated latest-treats section in addition to its existing showcase. Test both public storefronts before merging into `main`.
-7. After testing, review and merge the feature branch into `main` to deploy with your existing website hosting workflow.
+1. In the **Van Schalkwyk Holdings Netlify project** open **Project configuration → Environment variables**.
+2. Add `VSH_ADMIN_KEY` with a **long, unique randomly generated secret** (at least 32 characters). Set the scope to **Functions** or **All scopes**. Do not use Nuvetriq's admin key; give Holdings its own. Never store it in GitHub, code, screenshots or chat.
+3. Save and trigger a new deploy after the feature branch is reviewed and merged (or use a branch deploy specifically configured for this app).
+4. Ensure this project deploys the repo via **Netlify Git-based builds** so Functions are bundled and the `@netlify/blobs` package from `package.json` is installed. The `netlify.toml` sets `publish = "."` and `functions = "netlify/functions"`.
+5. Open `https://YOUR-SITE-DOMAIN/admin.html`, enter the key. The key is kept only in the browser tab's `sessionStorage` until the tab/session ends or you sign out.
+6. Select **Granny's**; create an **unpublished** test product. Refresh, edit, and verify it remains saved. Publish it and confirm it appears in the public Granny's section.
+7. Switch to **Clever Cubs** without signing in again. Create an unpublished book listing, verify isolation, then publish and check its catalogue. **Do not upload paid master PDFs** — only cover images are supported.
+8. Sign out and confirm an invalid key cannot access draft products or publish changes. Verify the public endpoint shows only published products.
 
-## Security and limits
+## Paths
 
-- The dashboard's page itself can be opened by anyone; only the verified master user can **read drafts or write products**. HTML `noindex` is NOT authentication.
-- Public shoppers can only read products whose `is_active` is true.
-- The product-images bucket is public for photographs only. Never upload private digital books or customer information to it.
-- Live checkout, Yoco payment verification, customer records, and secure book download links have not been implemented. The Clever Cubs cart remains a **test-order preview**.
-- Replacing an image uploads a new object; stale images can be cleaned up later by an authenticated maintenance workflow.
-- Adding future staff accounts requires deliberate updates to the database role model and policies; the current policy is intentionally master-only.
+- Login page: `/admin.html`
+- Admin API: `/.netlify/functions/admin-products`
+- Product images: `/.netlify/functions/product-image`
+- Secret server environment variable: `VSH_ADMIN_KEY`
+- Persistent product store: `vsh-products`
+- Persistent image store: `vsh-product-images`
+
+## Security and limitations
+
+- **The URL is not the security barrier**. The Functions verify the key for all private reads and all writes. Anonymous users only see published products.
+- Use HTTPS and a password manager to store the key. In this first version the key is presented to the server on each admin request using the `X-Admin-Key` header, like Nuvetriq's private-key flow; it is **not** an email/password account and does not provide per-user accounts, MFA, or audit logs.
+- For multiple staff logins, upgrade to individual user sessions with multi-factor authentication later.
+- Photos: JPG, PNG and WebP only, up to **3 MB**. They are public when their unguessable URL is known. Never upload private documents or customer information.
+- Netlify Blobs stores are **site-wide and shared across deploy contexts**. Use only drafts and dummy test products in branch previews; changes in a preview can persist into production stores if the same site is used. Product keys are per-item, reducing simultaneous edit conflicts.
+- No deletion action is implemented. Hide an item by toggling off Published.
+- Payments, secure PDF files and ordering are not connected. Product details cannot be relied upon as an inventory/order accounting system.
+- This feature is deliberately isolated on branch `feature/unified-product-admin`. It has not been merged into the live `main` branch or deployed/tested on Netlify yet.
