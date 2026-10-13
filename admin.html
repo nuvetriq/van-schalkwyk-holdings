@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Van Schalkwyk Holdings | Admin</title>
+  <meta name="description" content="Private management workspace for Van Schalkwyk Holdings.">
+  <link rel="icon" href="assets/vs-transparent.svg">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><img src="assets/vs-transparent.svg" alt="" width="43" height="43"><span>VAN SCHALKWYK <strong>HOLDINGS</strong><small>ADMIN WORKSPACE</small></span></a>
+    <a class="top-link" href="index.html">← Back to website</a>
+  </header>
+  <main class="wrap">
+    <section id="setup-panel" class="panel setup-panel" hidden aria-live="polite">
+      <p class="eyebrow">Backend setup needed</p>
+      <h1>One dashboard. Two businesses.</h1>
+      <p>The admin workspace has been built, but login is intentionally disabled until secure authentication and the products database are connected.</p>
+      <p>Follow the <a href="https://github.com/nuvetriq/van-schalkwyk-holdings/blob/feature/unified-product-admin/ADMIN-SETUP.md" target="_blank" rel="noopener">setup instructions</a>. Never store a password or secret key in website code.</p>
+    </section>
+    <section id="login-panel" class="login-layout" aria-labelledby="login-heading" hidden>
+      <div class="welcome"><p class="eyebrow">Welcome back</p><h1 id="login-heading">Everything in one place.</h1><p>Log in once to manage product listings for both Granny’s and Clever Cubs Learning.</p><div class="welcome-chips"><span>Granny’s</span><span>Clever Cubs</span></div></div>
+      <form id="login-form" class="panel login-form">
+        <h2>Admin sign in</h2>
+        <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" required placeholder="you@example.com">
+        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Your secure password">
+        <button id="sign-in-button" class="button primary" type="submit">Sign in</button>
+        <p class="form-note">Access is restricted to the approved master admin account. No public sign-up.</p>
+        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <section id="dashboard" hidden aria-labelledby="dashboard-heading">
+      <div class="dashboard-intro"><div><p class="eyebrow">PRODUCT MANAGEMENT</p><h1 id="dashboard-heading">Your business dashboard</h1><p>One account, with a separate catalogue for each business.</p></div><div class="user-actions"><span id="user-email"></span><button id="sign-out-button" type="button" class="button subtle">Sign out</button></div></div>
+      <div class="business-switch" role="group" aria-label="Choose the business to manage">
+        <button class="business-option selected" type="button" data-business="grannys" aria-pressed="true"><span class="business-avatar granny">G</span><span>Granny’s<small>Sweet treats &amp; baked goods</small></span></button>
+        <button class="business-option" type="button" data-business="clever-cubs" aria-pressed="false"><span class="business-avatar cubs">C</span><span>Clever Cubs<small>Learning resources &amp; books</small></span></button>
+      </div>
+      <div class="metrics"><div class="metric"><b id="total-count">0</b><span>Total products</span></div><div class="metric"><b id="active-count">0</b><span>Published</span></div><div class="metric"><b id="hidden-count">0</b><span>Unpublished</span></div></div>
+      <div class="workspace">
+        <section class="panel product-list-panel" aria-labelledby="list-heading"><div class="section-top"><div><p class="eyebrow" id="current-business-label">GRANNY’S</p><h2 id="list-heading">Your products</h2></div><button id="new-product" class="button primary" type="button">+ New product</button></div><label class="sr-only" for="search-products">Search products</label><input type="search" id="search-products" placeholder="Search products by name or category"><div id="product-list" class="product-list" aria-live="polite"><p class="empty">Sign in to load your products.</p></div><p id="list-message" class="message" role="status" aria-live="polite"></p></section>
+        <section class="panel editor-panel" aria-labelledby="editor-heading"><div class="section-top"><div><p class="eyebrow">PRODUCT DETAILS</p><h2 id="editor-heading">Add a product</h2></div><button class="button subtle" type="button" id="reset-product">Clear</button></div>
+          <form id="product-form">
+            <input type="hidden" id="product-id">
+            <label for="product-title">Product name *</label><input id="product-title" maxlength="120" required placeholder="e.g. Caramel popcorn">
+            <label for="product-category">Category *</label><input id="product-category" maxlength="80" list="category-suggestions" required placeholder="e.g. Baked Goods"><datalist id="category-suggestions"></datalist>
+            <label for="product-description">Description</label><textarea id="product-description" maxlength="1000" rows="4" placeholder="Tell customers about this product"></textarea>
+            <div class="form-row"><div><label for="product-price">Price (R) *</label><input id="product-price" type="number" required min="0" max="999999.99" step="0.01" placeholder="0.00"></div><div><label for="product-grade">Grade / size (optional)</label><input id="product-grade" maxlength="80" placeholder="e.g. Grade 4 or 250g"></div></div>
+            <label for="product-image">Product image (JPG, PNG or WebP; max 5 MB)</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp"><div id="image-preview" class="image-preview" hidden><img id="preview-img" alt="Product preview"><span>Current/selected image</span></div>
+            <label class="toggle"><input type="checkbox" id="product-active"><span><b>Published / visible to customers</b><small>Leave off for a draft. Clever Cubs checkout remains a test preview until payments are set up.</small></span></label>
+            <button id="save-product" class="button primary full" type="submit">Save product</button>
+            <p id="form-message" class="message" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+      <p class="dashboard-footnote">Product management only. Customer payments, order management and private PDF delivery are not active.</p>
+    </section>
+  </main>
+  <script src="assets/admin-config.js"></script>
+  <script type="module" src="assets/admin.js"></script>
+</body>
+</html>
