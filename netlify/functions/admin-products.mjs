@@ -24,14 +24,17 @@ function validate(input) {
   if (typeof input.price === "boolean" || !Number.isFinite(price) || price < 0 || price > 999999.99) throw Error("Invalid price.");
   if (!validImage(input.image_path, business)) throw Error("Invalid image path.");
   const pdf = input.pdf_path == null || input.pdf_path === "" ? null : String(input.pdf_path);
-  if (pdf && (business !== "grannys" || !/^grannys\/[0-9a-f-]{36}\.pdf$/i.test(pdf))) {
-    throw Error("Invalid private PDF path.");
+  const isBook = business === "clever-cubs" ||
+    (business === "grannys" && /^recipe books?$/i.test(category));
+  // Book files must be kept in the matching business folder, not attached to treats
+  // or another business's listing. They are NEVER included in public responses.
+  if (pdf && (!isBook || !new RegExp("^"+business+"/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.pdf$","i").test(pdf))) {
+    throw Error("Invalid private PDF path for this business.");
   }
-  // Only the recipe-book category supports downloadable PDFs.
-  if (pdf && !/^recipe books?$/i.test(category)) throw Error("Only recipe books may have a PDF.");
-  if (business==="grannys" && /^recipe books?$/i.test(category) && input.is_active===true && !pdf)
-    throw Error("Please upload the private recipe PDF before publishing this book.");
-
+  if (isBook && input.is_active === true && !pdf)
+    throw Error("Upload the private PDF before publishing a digital book.");
+  if (isBook && input.is_active === true && price < 1)
+    throw Error("A published digital book needs a price of at least R1.00.");
   return {
     business, title, category, description, grade,
     price: Math.round(price * 100) / 100,
@@ -85,6 +88,20 @@ export default async function handler(request) {
     const existing = await db.get(key, { type: "json" });
     if (url.searchParams.has("id") && !existing) return json({ error: "Product not found." }, 404);
     if (!url.searchParams.has("id") && existing) return json({ error: "Product already exists." }, 409);
+    // A digital book cannot be published with a fake, deleted or missing PDF key.
+    // Also verify referenced private PDFs even when saving a draft to prevent
+    // assigning invented paths to a product.
+    if (payload.pdf_path) {
+      const pdfStore = getStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
+      const metadata = await pdfStore.getMetadata(payload.pdf_path);
+      if (!metadata) return json({ error: "The private PDF cannot be found. Please upload it again." }, 400);
+    }
+    // Image paths must point to an existing upload in the appropriate business.
+    if (payload.image_path) {
+      const imgStore = getStore({ name: "vsh-product-images", consistency: "strong" });
+      if (!await imgStore.getMetadata(payload.image_path))
+        return json({ error: "The product photo cannot be found. Please upload it again." }, 400);
+    }
     const now = new Date().toISOString();
     const product = { ...payload, id, created_at: existing?.created_at || now, updated_at: now };
     await db.setJSON(key, product);
