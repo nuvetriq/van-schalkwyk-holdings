@@ -1,11 +1,17 @@
 import { getStore, getDeployStore } from "@netlify/blobs";
 
-// Production catalogues persist across normal site updates.
-// Every preview, branch deploy and local test gets its own isolated store.
-// Fail closed to deploy-scoped storage if CONTEXT is missing or unrecognised.
-export function openVSHStore(name) {
-  if (process.env.CONTEXT === "production") {
-    return getStore({ name, consistency: "strong" });
+// Some callers use a name string; others use the Netlify options-object form.
+// Support both while always enabling strong consistency.
+// Production data persists between releases. Draft/previews are isolated.
+// Fail closed to deploy-scoped storage if CONTEXT is missing or unknown.
+export function openVSHStore(nameOrOptions) {
+  const options = typeof nameOrOptions === "string"
+    ? { name: nameOrOptions, consistency: "strong" }
+    : { ...nameOrOptions, consistency: "strong" };
+  if (!options.name || typeof options.name !== "string") {
+    throw new Error("A valid storage namespace is required.");
   }
-  return getDeployStore({ name, consistency: "strong" });
+  return process.env.CONTEXT === "production"
+    ? getStore(options)
+    : getDeployStore(options);
 }
