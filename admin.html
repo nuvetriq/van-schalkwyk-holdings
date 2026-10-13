@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Van Schalkwyk Holdings | Admin</title>
+  <meta name="description" content="Private management workspace for Van Schalkwyk Holdings.">
+  <link rel="icon" href="assets/vs-transparent.svg">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Van Schalkwyk Holdings homepage">
+      <img src="assets/vs-transparent.svg" alt="" width="43" height="43">
+      <span>VAN SCHALKWYK <strong>HOLDINGS</strong></span>
+    </a>
+    <a class="top-link" href="index.html">← Back to website</a>
+  </header>
+  <main class="wrap">
+    <section id="login-panel" class="login-layout" aria-labelledby="login-heading" hidden>
+      <div class="welcome">
+        <img class="login-emblem" src="assets/vs-transparent.svg" alt="Van Schalkwyk Holdings crest" width="114" height="114">
+        <p class="login-brand-name">VAN SCHALKWYK HOLDINGS</p>
+        <h1 id="login-heading">Admin Portal</h1>
+        <p class="login-subtitle">Secure business management</p>
+      </div>
+      <form id="login-form" class="panel login-form">
+        <h2>Sign in</h2>
+        <p class="login-form-intro">Enter your private admin key to continue.</p>
+        <label for="admin-key">Admin key</label>
+        <input id="admin-key" name="admin-key" type="password" autocomplete="current-password" required
+          placeholder="Enter your admin key" spellcheck="false" autocapitalize="off" autocorrect="off">
+        <button id="sign-in-button" class="button primary" type="submit">Sign in securely →</button>
+        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </form>
+      <p class="login-footer">Private access · Van Schalkwyk Holdings</p>
+    </section>
+    <section id="dashboard" hidden aria-labelledby="dashboard-heading">
+      <div class="dashboard-intro"><div><p class="eyebrow">PRODUCT MANAGEMENT</p><h1 id="dashboard-heading">Your business dashboard</h1><p>One account, with a separate catalogue for each business.</p></div><div class="user-actions"><span id="user-email">Master administrator</span><button id="sign-out-button" type="button" class="button subtle">Sign out</button></div></div>
+      <p class="catalogue-notice" role="note"><strong>Product management is active.</strong> Public bookshop listings, Yoco checkout and automatic PDF email delivery are still being prepared. Publishing a product here saves its catalogue status, but does not yet enable customer purchases.</p>
+      <div class="business-switch" role="group" aria-label="Choose the business to manage">
+        <button class="business-option selected" type="button" data-business="grannys" aria-pressed="true"><span class="business-avatar granny"><img src="assets/grannys-logo-2026.webp" alt="" width="66" height="66" loading="eager"></span><span>Granny’s<small>Sweet treats &amp; baked goods</small></span></button>
+        <button class="business-option" type="button" data-business="clever-cubs" aria-pressed="false"><span class="business-avatar cubs"><img src="assets/clever-new.png" alt="" width="66" height="66" loading="eager"></span><span>Clever Cubs<small>Learning resources &amp; books</small></span></button>
+      </div>
+      <div class="metrics"><div class="metric"><b id="total-count">0</b><span>Total products</span></div><div class="metric"><b id="active-count">0</b><span>Published</span></div><div class="metric"><b id="hidden-count">0</b><span>Unpublished</span></div></div>
+      <div class="workspace">
+        <section class="panel product-list-panel" aria-labelledby="list-heading"><div class="section-top"><div><p class="eyebrow" id="current-business-label">GRANNY’S</p><h2 id="list-heading">Your products</h2></div><div class="admin-create-actions"><button id="new-recipe-book" class="button subtle" type="button" hidden>+ Recipe book</button><button id="new-clever-book" class="button subtle" type="button" hidden>+ PDF learning book</button><button id="new-product" class="button primary" type="button">+ New product</button></div></div><label class="sr-only" for="search-products">Search products</label><input type="search" id="search-products" placeholder="Search products by name or category"><div id="product-list" class="product-list" aria-live="polite"><p class="empty">Sign in to load your products.</p></div><p id="list-message" class="message" role="status" aria-live="polite"></p></section>
+        <section class="panel editor-panel" aria-labelledby="editor-heading"><div class="section-top"><div><p class="eyebrow">PRODUCT DETAILS</p><h2 id="editor-heading">Add a product</h2></div><button class="button subtle" type="button" id="reset-product">Clear</button></div>
+          <form id="product-form">
+            <input type="hidden" id="product-id">
+            <label for="product-title">Product name *</label><input id="product-title" maxlength="120" required placeholder="e.g. Caramel popcorn">
+            <label for="product-category">Category *</label><input id="product-category" maxlength="80" list="category-suggestions" required placeholder="e.g. Baked Goods"><datalist id="category-suggestions"></datalist><p id="category-helper" class="admin-field-hint">Choose Recipe Books for books that should appear in Granny’s recipe-book section.</p>
+            <label for="product-description">Description</label><textarea id="product-description" maxlength="1000" rows="4" placeholder="Tell customers about this product"></textarea>
+            <div class="form-row"><div><label for="product-price">Price (R) *</label><input id="product-price" type="number" required min="0" max="999999.99" step="0.01" placeholder="0.00"></div><div><label for="product-grade">Format / grade / size (optional)</label><input id="product-grade" maxlength="80" placeholder="e.g. Printed, Digital, Grade 4 or 250g"></div></div>
+            <label for="product-image">Product photo or book cover (JPG, PNG or WebP; max 3 MB)</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp"><div id="image-preview" class="image-preview" hidden><img id="preview-img" alt="Product preview"><span>Current/selected image</span></div>
+            <div id="book-pdf-controls" hidden>
+              <label id="pdf-label" for="product-pdf">Private digital book PDF (max 3 MB)</label>
+              <input id="product-pdf" type="file" accept="application/pdf,.pdf">
+              <p id="pdf-status" class="admin-field-hint">The original PDF stays private. Only customers with a verified purchase will eventually receive it.</p>
+              <label class="admin-remove-pdf" id="remove-pdf-wrapper" hidden><input type="checkbox" id="remove-pdf"><span>Detach the current PDF from this listing (you must unpublish the book first)</span></label>
+              <p class="admin-field-hint">PDF files are never publicly downloadable from this admin system. Digital checkout and email delivery are not live yet.</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="product-active"><span><b>Published / visible to customers</b><small>Leave off for a draft. Published digital books require a private PDF. Checkout and paid delivery are not live yet.</small></span></label>
+            <button id="save-product" class="button primary full" type="submit">Save product</button>
+            <p id="form-message" class="message" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+      <p class="dashboard-footnote">Admin-only development build. Publishing controls catalogue visibility; payments, customer orders and automated PDF emails are not active on the live website.</p>
+    </section>
+  </main>
+  <script src="assets/admin.js" defer></script>
+</body>
+</html>
