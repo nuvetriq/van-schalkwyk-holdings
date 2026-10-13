@@ -24,7 +24,7 @@ export default async function handler(request) {
       return json({ error: "This is not a valid PDF file." }, 400);
     }
     const key = "grannys/" + crypto.randomUUID() + ".pdf";
-    await pdfStore().set(key, data);
+    await pdfStore().set(key, data.buffer);
     return json({ pdf_path: key }, 201);
   } catch (error) {
     console.error("Private recipe PDF upload failed", error);
