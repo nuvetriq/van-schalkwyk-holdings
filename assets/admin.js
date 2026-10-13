@@ -292,7 +292,7 @@ async function saveProduct(event) {
 }
 function loginFailure(error) {
   if (error.status === 503) {
-    return "Admin login is not available in this deployment yet. Make sure VSH_ADMIN_KEY is at least 32 characters, available to Netlify Functions in Deploy Previews, then trigger a new preview deployment.";
+    return error.message || "The admin service is not configured in this Deploy Preview. Rebuild the preview after updating VSH_ADMIN_KEY.";
   }
   if (error.status === 401) {
     return "That admin key wasn't recognised. Check that it matches your Netlify secret exactly, including capital letters.";
