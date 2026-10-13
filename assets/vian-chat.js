@@ -7,6 +7,7 @@
   const page = path.endsWith("grannys-little-bakery.html") ? "grannys" :
     path.endsWith("clever-cubs-learning.html") ? "clever-cubs" : "home";
   const isHome = page === "home";
+  if(!isHome) document.body.classList.add("vian-has-basket");
   const STORAGE_CHAT = "vsh_vian_chat_v1";
   const STORAGE_WELCOME = "vsh_vian_welcomed_v1";
   const avatar = new URL("vian-avatar.webp", document.currentScript?.src || location.href).href;
