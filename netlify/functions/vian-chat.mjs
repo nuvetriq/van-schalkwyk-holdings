@@ -74,8 +74,9 @@ export default async function handler(request) {
  try{body=JSON.parse(raw)}catch{return json({error:"Invalid message."},400)}
  const message=clean(body?.message);
  if(message.length<1 || message.length>MAX_TEXT)return json({error:"Please send a message up to 1,500 characters."},400);
- const source=clean(body.sourcePage);
- if(!["/","/index.html","/grannys-little-bakery.html","/clever-cubs-learning.html"].includes(source))
+ // Accept the clean production URLs as well as the original .html paths.
+ const source=clean(body.sourcePage).replace(/\/$/,"") || "/";
+ if(!["/","/index","/index.html","/grannys-little-bakery","/grannys-little-bakery.html","/clever-cubs-learning","/clever-cubs-learning.html"].includes(source))
    return json({error:"This assistant is available only on the Holdings, Granny's and Clever Cubs pages."},400);
  const history=Array.isArray(body?.history)?body.history.slice(-MAX_HISTORY):[];
  if(history.length>MAX_HISTORY || history.some(item=>!["assistant","user"].includes(item?.role) ||
