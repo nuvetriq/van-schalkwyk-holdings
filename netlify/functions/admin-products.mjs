@@ -23,10 +23,18 @@ function validate(input) {
   if (description.length > 1000 || grade.length > 80) throw Error("Description or size is too long.");
   if (typeof input.price === "boolean" || !Number.isFinite(price) || price < 0 || price > 999999.99) throw Error("Invalid price.");
   if (!validImage(input.image_path, business)) throw Error("Invalid image path.");
+  const pdf = input.pdf_path == null || input.pdf_path === "" ? null : String(input.pdf_path);
+  if (pdf && (business !== "grannys" || !/^grannys\/[0-9a-f-]{36}\.pdf$/i.test(pdf))) {
+    throw Error("Invalid private PDF path.");
+  }
+  // Only the recipe-book category supports downloadable PDFs.
+  if (pdf && !/^recipe books?$/i.test(category)) throw Error("Only recipe books may have a PDF.");
+
   return {
     business, title, category, description, grade,
     price: Math.round(price * 100) / 100,
     image_path: input.image_path || null,
+    pdf_path: pdf,
     is_active: input.is_active === true
   };
 }
