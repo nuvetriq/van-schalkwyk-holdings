@@ -226,6 +226,8 @@ async function init() {
     return;
   }
   try {
+    const sdk = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    createClient = sdk.createClient;
     db = createClient(config.supabaseUrl.replace(/\/$/, ""), config.publishableKey);
     const { data, error } = await db.auth.getSession();
     if (error) throw error;
