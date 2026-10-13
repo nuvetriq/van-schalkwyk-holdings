@@ -34,7 +34,36 @@ In the **Van Schalkwyk Holdings** Netlify project, add:
 - Optional `VIAN_OPENAI_MODEL`: defaults to `gpt-4.1-mini` if not supplied.
 - Optional `VIAN_RATE_LIMIT_SALT`: a randomly generated private string used when hashing visitor IPs for usage limits.
 
-The Netlify Function is at `/.netlify/functions/vian-chat`. It requests OpenAI responses server-side with `store: false`, a bounded recent chat history, limited output tokens and rate limiting of 25 messages/day per visitor IP and 250/day globally (Netlify Blobs). Production abuse prevention should also include Netlify platform rate-limiting / bot controls.
+The Netlify Function is at `/.netlify/functions/vian-chat`. It requests OpenAI responses server-side with `store: false`, a bounded recent chat history and capped output tokens.
+
+### Prepaid OpenAI billing — manual top-ups like Nia
+
+1. Use a **dedicated Vian project** in the same OpenAI API organization (or a separately billed organization if financial separation is required). API credit is purchased for the **organization**, not as a fixed number of conversations for a project.
+2. At **OpenAI Platform → Billing**, purchase a small initial prepaid amount (currently the minimum is **US$5**). Turn **Use auto-reload OFF**. With no auto-reload, additional credit is purchased **manually by the owner**.
+3. Under the **Vian project → Limits → Spend**, set a suitable **monthly spend limit** and explicitly select **Enforce a hard limit**. A spend alert alone is NOT a spending cutoff. Set early alerts to warn before exhaustion.
+4. OpenAI's prepaid balance and enforced hard spend limits may stop requests **with a short delay**, so small overages are possible. Don't represent either as a guaranteed exact spending cutoff. Projects within the same organization can draw from its common credit balance.
+5. Never place the OpenAI secret key in the public website or commit it to the repo. Add it only in the **Holdings Netlify project** as `OPENAI_API_KEY`, available to Functions.
+
+### Vian usage and anti-bot caps — added to the draft
+
+| Protection | Default | Notes |
+|---|---:|---|
+| Netlify network edge per visitor IP | **4 requests per 60 seconds** | Returns HTTP 429 under excessive bursts; enforcement may lag a few seconds |
+| Vian server per visitor IP per hour | **10 requests** | Netlify Blobs atomic usage counter |
+| Vian server per visitor IP per day | **20 requests** | Resets by UTC date |
+| Vian server across the entire site per day | **100 requests** | Controls total paid API calls even across many different IPs |
+| OpenAI response limit | **420 output tokens** | Server-side |
+| Conversation context | **8 recent messages** | Stored only in visitor tab, not server transcript database |
+
+The hourly and daily server limits can be adjusted in Netlify using `VIAN_IP_HOURLY_LIMIT`, `VIAN_IP_DAILY_LIMIT`, and `VIAN_DAILY_REQUEST_LIMIT` (all optional). The edge 4/minute setting is in `netlify/functions/vian-chat.mjs`.
+
+These protect against ordinary spam/abuse, **but are not an absolute anti-hacking guarantee**; a malicious distributed botnet can still try to bypass per-IP limits. Combined with project hard spend limits, manual recharge, and Netlify's additional bot/WAF controls, risk is reduced considerably. Review monitoring and usage regularly. The server returns a friendly unavailable message if OpenAI reports prepaid credits or spend limits are exhausted.
+
+Official resources:
+- https://help.openai.com/en/articles/8264644-how-can-i-set-up-prepaid-billing
+- https://developers.openai.com/api/docs/guides/spend-limits
+- https://docs.netlify.com/manage/security/secure-access-to-sites/rate-limiting/
+
 
 The OpenAI key **must be configured before the AI answers can work**. Without it, Vian can appear as a bubble and show an informative unavailable message, but cannot chat.
 
@@ -48,7 +77,7 @@ The OpenAI key **must be configured before the AI answers can work**. Without it
 - [ ] Ask about PurEss and Cricut, confirm he clearly says coming soon.
 - [ ] Prompt-injection and unrelated trivia tests: stays within business scope.
 - [ ] Ensure no OpenAI API key is exposed in frontend scripts, browser responses or GitHub.
-- [ ] Review privacy notice to cover AI chat processing and costs/abuse limits.
+- [ ] Verify prepaid billing with automatic recharge OFF, Vian's enforced project hard spend limit, and early spend alerts.\n- [ ] Test rate limits (4/min, 10/hour/IP, 20/day/IP and 100/day/site) without using billable calls.\n- [ ] Review privacy notice to cover AI chat processing and costs/abuse limits.
 - [ ] Test mobile basket interaction and screen-reader/accessibility basics.
 - [ ] Test with real Netlify branch deploy using your own configured OpenAI key before merging PR #2.
 
