@@ -11,26 +11,30 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><img src="assets/vs-transparent.svg" alt="" width="43" height="43"><span>VAN SCHALKWYK <strong>HOLDINGS</strong><small>ADMIN WORKSPACE</small></span></a>
+    <a class="brand" href="index.html" aria-label="Van Schalkwyk Holdings homepage">
+      <img src="assets/vs-transparent.svg" alt="" width="43" height="43">
+      <span>VAN SCHALKWYK <strong>HOLDINGS</strong></span>
+    </a>
     <a class="top-link" href="index.html">← Back to website</a>
   </header>
   <main class="wrap">
-    <section id="setup-panel" class="panel setup-panel" hidden aria-live="polite">
-      <p class="eyebrow">Backend setup needed</p>
-      <h1>One dashboard. Two businesses.</h1>
-      <p>The admin workspace is ready for Netlify, but the private admin key must be configured in the Netlify environment before sign-in is enabled.</p>
-      <p>Follow the <a href="https://github.com/nuvetriq/van-schalkwyk-holdings/blob/feature/unified-product-admin/ADMIN-SETUP.md" target="_blank" rel="noopener">setup instructions</a>. Never store your admin key in website code.</p>
-    </section>
     <section id="login-panel" class="login-layout" aria-labelledby="login-heading" hidden>
-      <div class="welcome"><p class="eyebrow">Welcome back</p><h1 id="login-heading">Everything in one place.</h1><p>Log in once to manage product listings for both Granny’s and Clever Cubs Learning.</p><div class="welcome-chips"><span>Granny’s</span><span>Clever Cubs</span></div></div>
+      <div class="welcome">
+        <img class="login-emblem" src="assets/vs-transparent.svg" alt="Van Schalkwyk Holdings crest" width="114" height="114">
+        <p class="login-brand-name">VAN SCHALKWYK HOLDINGS</p>
+        <h1 id="login-heading">Admin Portal</h1>
+        <p class="login-subtitle">Secure business management</p>
+      </div>
       <form id="login-form" class="panel login-form">
-        <h2>Private admin login</h2>
-        <label for="admin-key">Master admin key</label>
-        <input id="admin-key" name="admin-key" type="password" autocomplete="current-password" required placeholder="Enter your private admin key">
-        <button id="sign-in-button" class="button primary" type="submit">Sign in</button>
-        <p class="form-note">Just like Nuvetriq: one private key, stored in this browser tab for this session. No public sign-up.</p>
+        <h2>Sign in</h2>
+        <p class="login-form-intro">Enter your private admin key to continue.</p>
+        <label for="admin-key">Admin key</label>
+        <input id="admin-key" name="admin-key" type="password" autocomplete="current-password" required
+          placeholder="Enter your admin key" spellcheck="false" autocapitalize="off" autocorrect="off">
+        <button id="sign-in-button" class="button primary" type="submit">Sign in securely →</button>
         <p id="login-message" class="message" role="status" aria-live="polite"></p>
       </form>
+      <p class="login-footer">Private access · Van Schalkwyk Holdings</p>
     </section>
     <section id="dashboard" hidden aria-labelledby="dashboard-heading">
       <div class="dashboard-intro"><div><p class="eyebrow">PRODUCT MANAGEMENT</p><h1 id="dashboard-heading">Your business dashboard</h1><p>One account, with a separate catalogue for each business.</p></div><div class="user-actions"><span id="user-email">Master administrator</span><button id="sign-out-button" type="button" class="button subtle">Sign out</button></div></div>
