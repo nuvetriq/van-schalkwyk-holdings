@@ -15,3 +15,39 @@ window.CLEVER_CUBS_PRODUCTS = [
     active: true
   }
 ];
+
+/* Once the backend is configured, the public catalogue reads ONLY published
+   Clever Cubs products. Keep the old demo product in setup mode. */
+window.CLEVER_CUBS_PRODUCTS_READY = (async function () {
+  try {
+    const items = await window.VSH_PUBLIC_PRODUCTS.list("clever-cubs");
+    if (items === null) return;
+    const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[c]);
+    const categorySlug = label => {
+      const s = String(label || "").toLowerCase();
+      if (s.includes("preschool")) return "preschool";
+      if (s.includes("primary")) return "primary";
+      if (s.includes("skill")) return "skills";
+      return "other";
+    };
+    window.CLEVER_CUBS_PRODUCTS = items.map(item => ({
+      id: item.id,
+      title: escapeHtml(item.title),
+      category: categorySlug(item.category),
+      categoryLabel: escapeHtml(item.category),
+      grade: escapeHtml(item.grade),
+      description: escapeHtml(item.description),
+      price: Number(item.price),
+      currency: "ZAR",
+      badge: "DIGITAL RESOURCE",
+      image_url: item.image_path ? window.VSH_PUBLIC_PRODUCTS.photo(item.image_path) : "",
+      demo: false,
+      active: item.is_active
+    }));
+  } catch (error) {
+    console.warn("Clever Cubs live catalogue unavailable:", error);
+    window.CLEVER_CUBS_PRODUCTS = [];
+  }
+})();
