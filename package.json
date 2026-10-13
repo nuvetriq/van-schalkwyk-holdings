@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check netlify/functions/admin-products.mjs && node --check netlify/functions/product-image.mjs && node --check netlify/lib/auth.mjs && node --check assets/admin.js && node --check assets/public-products.js"
+    "check": "node --check netlify/functions/admin-products.mjs && node --check netlify/functions/product-image.mjs && node --check netlify/lib/auth.mjs && node --check assets/admin.js && node --check assets/public-products.js",
+    "build": "node scripts/build.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4",
