@@ -1,0 +1,57 @@
+/* Vian: self-contained floating assistant, independent of the site's styles. */
+#vian-root{--vian-ink:#493323;--vian-gold:#bb7e30;--vian-cream:#fffaf0;--vian-beige:#f6e4cc;--vian-border:#e6cead;--vian-shadow:0 18px 65px #3d251839;position:relative;z-index:450;color:var(--vian-ink);font-family:Inter,"Segoe UI",Arial,sans-serif;line-height:1.45;font-size:14px}
+#vian-root *,#vian-root *:before,#vian-root *:after{box-sizing:border-box}
+#vian-root button,#vian-root textarea{font-family:inherit}
+#vian-root button{cursor:pointer}
+#vian-root [hidden]{display:none!important}
+#vian-root .vian-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#vian-root button:focus-visible,#vian-root textarea:focus-visible{outline:3px solid #b88334;outline-offset:3px}
+#vian-root .vian-launcher{position:fixed;left:22px;bottom:22px;display:flex;align-items:center;gap:10px;padding:5px 17px 5px 5px;border:1px solid #e6c9a2;border-radius:40px;background:linear-gradient(130deg,#fffaf0,#ffe6be);box-shadow:0 8px 36px #4b322947;z-index:451;text-align:left;max-width:245px;min-height:63px;transition:transform .2s ease,box-shadow .2s ease;color:#4e382b}
+#vian-root .vian-launcher:hover{transform:translateY(-3px);box-shadow:0 14px 36px #4b32294a}
+#vian-root .vian-launcher>img{width:53px;height:53px;object-fit:cover;border-radius:50%;background:#ecd3ad;border:2px solid white;flex:none}
+#vian-root .vian-launcher span:not(.vian-launcher-spark){display:flex;flex-direction:column;gap:2px}
+#vian-root .vian-launcher strong{font-size:15px;font-weight:850;white-space:nowrap}
+#vian-root .vian-launcher strong em{color:#ae6d25;font-style:normal}
+#vian-root .vian-launcher small{font-size:10px;color:#927553;white-space:nowrap}
+#vian-root .vian-launcher-spark{color:#c89443;margin-left:1px}
+#vian-root .vian-chat{position:fixed;left:18px;bottom:18px;width:min(390px,calc(100vw - 36px));height:min(660px,calc(100dvh - 36px));max-height:calc(100dvh - 36px);background:var(--vian-cream);border:1px solid #e4cda9;border-radius:24px;box-shadow:var(--vian-shadow);z-index:452;overflow:hidden;display:flex;flex-direction:column;isolation:isolate}
+#vian-root .vian-header{display:flex;gap:10px;align-items:center;flex:none;padding:12px 15px;background:linear-gradient(100deg,#563622,#80522d);color:#fff7ec;min-height:81px}
+#vian-root .vian-header>img{height:53px;width:53px;object-fit:cover;border:2px solid #ecc991;border-radius:16px;flex:none;background:#fff2df}
+#vian-root .vian-header>div{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#vian-root .vian-header strong{font-size:16px;letter-spacing:.2em}
+#vian-root .vian-header strong span{color:#f9d78f}
+#vian-root .vian-header small{font-size:10px;color:#f3d8b6;line-height:1.3}
+#vian-root .vian-close,#vian-root .vian-new{border:1px solid #b18c6522;background:#ffffff1a;color:#fff;padding:0;border-radius:10px;width:30px;height:30px;flex:none;font-size:22px;display:grid;place-items:center}
+#vian-root .vian-intro{padding:16px 19px 12px;background:linear-gradient(160deg,#fff6e8,#fffaf4);border-bottom:1px solid #eee0ca}
+#vian-root .vian-intro-eyebrow{font-size:9px;font-weight:850;letter-spacing:.16em;color:#bb843b;margin:0 0 4px}
+#vian-root .vian-intro h2{font-family:Georgia,serif;font-size:24px;line-height:1.25;letter-spacing:-.03em;margin:0 0 7px;color:#5a3c2b;font-weight:700}
+#vian-root .vian-intro h2 em{color:#b37d38}
+#vian-root .vian-intro h2 span{color:#dfbd75}
+#vian-root .vian-intro>p:last-child{color:#876f55;font-size:12px;line-height:1.5;margin:0}
+#vian-root .vian-messages{padding:16px 14px 10px;flex:1;min-height:120px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px;background:#fffdfa}
+#vian-root .vian-message-row{display:flex}
+#vian-root .vian-message-row.user{justify-content:flex-end}
+#vian-root .vian-message{max-width:89%;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px 14px;font-size:13px;line-height:1.6;border-radius:15px}
+#vian-root .vian-message.assistant{background:#f4e6d0;border:1px solid #ecd5b4;border-bottom-left-radius:4px;color:#533d30}
+#vian-root .vian-message.user{background:#735033;color:#fffaf0;border-bottom-right-radius:4px}
+#vian-root .vian-typing{color:#b88749!important;letter-spacing:.26em;animation:vian-pulse 1.5s ease-in-out infinite}
+@keyframes vian-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+#vian-root .vian-quick{padding:9px 12px;display:flex;gap:6px;overflow-x:auto;background:#fffdfa;border-top:1px solid #efe1cc}
+#vian-root .vian-quick button{white-space:nowrap;padding:7px 10px;font-size:11px;border-radius:999px;border:1px solid #e7d2b5;background:#fff8eb;color:#704c2f;font-weight:800;flex:none}
+#vian-root .vian-quick button:hover{background:#f5e8d5}
+#vian-root .vian-form{display:flex;gap:8px;align-items:flex-end;padding:11px 12px 8px;background:#fffaf3}
+#vian-root .vian-form textarea{height:42px;min-height:42px;max-height:110px;min-width:0;flex:1;resize:none;border:1px solid #dfcbae;border-radius:12px;padding:11px 12px;font-size:13px;line-height:1.4;background:#fff;color:#493323;outline:0}
+#vian-root .vian-form textarea:focus{border-color:#bd9458}
+#vian-root .vian-form .vian-send{height:42px;width:44px;flex:none;border:0;background:#754d2d;color:white;font-size:18px;border-radius:12px;display:grid;place-items:center}
+#vian-root .vian-form button:disabled{opacity:.6;cursor:wait}
+#vian-root .vian-foot{flex:none;font-size:9px;color:#94795e;text-align:center;margin:0;padding:0 16px 12px;background:#fffaf3;line-height:1.5}
+#vian-root .vian-welcome-pop{position:fixed;bottom:97px;left:23px;z-index:451;width:min(335px,calc(100vw - 40px));display:flex;gap:11px;align-items:flex-start;border:1px solid #e8c493;border-radius:19px;padding:13px 29px 12px 11px;background:#fff9ed;color:#513b2c;box-shadow:0 10px 33px #43241330;animation:vian-appear .45s ease both}
+@keyframes vian-appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#vian-root .vian-welcome-pop>img{height:55px;width:55px;object-fit:cover;border-radius:14px;background:#f5d6a4;flex:none}
+#vian-root .vian-welcome-pop>div{flex:1;min-width:0}
+#vian-root .vian-welcome-pop strong{font-size:13px}
+#vian-root .vian-welcome-pop p{font-size:11px;line-height:1.5;color:#947251;margin:4px 0 7px}
+#vian-root .vian-welcome-ask{border:0;background:transparent;color:#9b6127;font-weight:900;font-size:11px;padding:0}
+#vian-root .vian-welcome-dismiss{position:absolute;right:7px;top:5px;border:0;background:transparent;color:#9b856e;font-size:18px;padding:2px}
+@media(max-width:480px){#vian-root .vian-launcher{left:12px;bottom:14px;max-width:210px;min-height:56px;padding-right:10px}#vian-root .vian-launcher>img{width:46px;height:46px}#vian-root .vian-launcher strong{font-size:13px}#vian-root .vian-launcher small{font-size:9px}#vian-root .vian-chat{left:8px;bottom:8px;width:calc(100vw - 16px);height:min(650px,calc(100dvh - 16px));border-radius:17px}#vian-root .vian-welcome-pop{left:12px;bottom:80px}}
+@media(prefers-reduced-motion:reduce){#vian-root .vian-launcher,#vian-root .vian-welcome-pop,#vian-root .vian-message{animation:none;transition:none}}
