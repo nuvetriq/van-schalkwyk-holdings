@@ -45,3 +45,5 @@
   .vsh-chat-panel { right: 9px; bottom: 9px; width: calc(100vw - 18px); height: min(720px,calc(100dvh - 18px)); border-radius: 16px; }
 }
 @media(prefers-reduced-motion:reduce) { .vsh-chat *, .vsh-chat *::before, .vsh-chat *::after { scroll-behavior:auto !important; transition:none !important; } }
+
+.vsh-chat [hidden] { display: none !important; }
