@@ -2,6 +2,7 @@ import { ordersStore, UUID } from "../lib/recipe-orders.mjs";
 import { deliverRecipeOrder } from "../lib/recipe-delivery.mjs";
 export const config={schedule:"@hourly"};
 export default async function handler() {
+  if(process.env.VSH_ENABLE_PAYMENTS !== "true" || process.env.CONTEXT !== "production") return;
   if (!(process.env.RESEND_API_KEY && process.env.VSH_RECIPE_EMAIL_FROM) && !(process.env.VSH_GMAIL_USER && process.env.VSH_GMAIL_APP_PASSWORD)) return;
   const store=ordersStore();
   const {blobs}=await store.list({prefix:"order/"});
