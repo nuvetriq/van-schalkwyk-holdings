@@ -1,6 +1,6 @@
 /* Vian's public-only business knowledge. Edit as businesses change.
    Do NOT add admin keys, customer records, private PDF paths or internal data. */
-import { getStore } from "@netlify/blobs";
+import { openVSHStore } from "./catalogue-store.mjs";
 
 export const VIAN_BUSINESS_KNOWLEDGE = `
 Van Schalkwyk Holdings: "Different passions. One family." A family of businesses based in South Africa: Granny's, Clever Cubs Learning, Nuvetriq, PurEss and Cricut. This assistant lives ONLY on the Van Schalkwyk Holdings website, not on Nuvetriq's own website.
@@ -18,7 +18,7 @@ Van Schalkwyk Holdings: "Different passions. One family." A family of businesses
 Holdings homepage: index.html; the homepage links to all five businesses. Visitors can choose a business based on needs (sweet treats or recipe books → Granny's; educational books → Clever Cubs; websites/AI/data/creative digital services → Nuvetriq; essential oils/soap → PurEss coming soon; custom crafts/vinyl → Cricut coming soon).
 `;
 
-const products = () => getStore({name:"vsh-products",consistency:"strong"});
+const products = () => openVSHStore({name:"vsh-products",consistency:"strong"});
 export async function getPublicProductKnowledge() {
   const store = products();
   const sections = [];
