@@ -1,15 +1,26 @@
-let createClient; // Loaded only after the public Supabase project details are configured.
-
-const config = window.VSH_ADMIN_CONFIG || {};
+/* Netlify master admin: no third-party client and no secret committed to GitHub. */
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
 const BUSINESSES = {
   grannys: { label: "GRANNY’S", categories: ["Gourmet Popcorn", "Party Snacks", "Baked Goods", "Jars", "Other"] },
   "clever-cubs": { label: "CLEVER CUBS", categories: ["Preschool", "Primary School", "High School", "Life Skills", "Other"] }
 };
-const configured = Boolean(config.supabaseUrl && config.publishableKey && /^https:\/\//.test(config.supabaseUrl));
-let db;
-let currentUser = null;
+const productsEndpoint = "/.netlify/functions/admin-products";
+const imagesEndpoint = "/.netlify/functions/product-image";
+const keyStoreName = "vsh_master_admin_key";
+const getKey = () => sessionStorage.getItem(keyStoreName) || "";
+async function requestJSON(url, options = {}, key = getKey()) {
+  const headers = new Headers(options.headers || {});
+  if (key) headers.set("X-Admin-Key", key);
+  const response = await fetch(url, { ...options, headers, cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || "Request failed.");
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
 let business = new URLSearchParams(location.search).get("business") || sessionStorage.getItem("vsh-admin-business") || "grannys";
 let products = [];
 let editingImagePath = "";
@@ -33,7 +44,7 @@ function fmtPrice(value) {
 }
 function imageUrl(path) {
   if (!path) return "";
-  return db.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+  return imagesEndpoint + "?key=" + encodeURIComponent(path);
 }
 function resetEditor() {
   $("product-form").reset();
@@ -124,19 +135,25 @@ function drawProducts() {
   }
 }
 async function loadProducts() {
+  const selected = business;
   $("product-list").textContent = "Loading products…";
   message("list-message", "");
-  const { data, error } = await db.from("products")
-    .select("id,business,title,category,grade,description,price,image_path,is_active,updated_at")
-    .eq("business", business).order("updated_at", { ascending: false });
-  if (error) {
+  try {
+    const output = await requestJSON(productsEndpoint + "?admin=1&business=" + encodeURIComponent(selected));
+    if (business !== selected) return;
+    products = output.products || [];
+    drawProducts();
+  } catch (error) {
+    if (business !== selected) return;
     products = [];
     drawProducts();
     message("list-message", error.message, "error");
-    return;
+    if (error.status === 401) {
+      sessionStorage.removeItem(keyStoreName);
+      show("login-panel");
+      message("login-message", "Your admin key was not accepted. Please sign in again.", "error");
+    }
   }
-  products = data || [];
-  drawProducts();
 }
 function editProduct(id) {
   const product = products.find(p => p.id === id);
@@ -167,20 +184,19 @@ async function saveProduct(event) {
     return;
   }
   const file = $("product-image").files[0];
-  if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
-    message("form-message", "Choose a JPG, PNG or WebP image no larger than 5 MB.", "error");
+  if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 3 * 1024 * 1024)) {
+    message("form-message", "Choose a JPG, PNG or WebP image no larger than 3 MB.", "error");
     return;
   }
   setBusy(true);
   try {
     let path = editingImagePath;
     if (file) {
-      const extension = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[file.type];
-      const key = business + "/" + crypto.randomUUID() + "." + extension;
-      const { error: uploadError } = await db.storage.from("product-images")
-        .upload(key, file, { contentType: file.type, upsert: false });
-      if (uploadError) throw uploadError;
-      path = key;
+      const data = new FormData();
+      data.set("business", business);
+      data.set("file", file);
+      const uploaded = await requestJSON(imagesEndpoint, { method: "POST", body: data });
+      path = uploaded.image_path;
     }
     const payload = {
       business,
@@ -194,10 +210,11 @@ async function saveProduct(event) {
     };
     if (!payload.title || !payload.category) throw new Error("A product name and category are required.");
     const id = $("product-id").value;
-    const query = id ? db.from("products").update(payload).eq("id", id).eq("business", business)
-                     : db.from("products").insert(payload);
-    const { error } = await query.select("id");
-    if (error) throw error;
+    await requestJSON(productsEndpoint + (id ? "?id=" + encodeURIComponent(id) : ""), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
     resetEditor();
     await loadProducts();
     message("list-message", "Product saved successfully.", "success");
@@ -207,44 +224,25 @@ async function saveProduct(event) {
     setBusy(false);
   }
 }
-async function authorize(user) {
-  const { data, error } = await db.from("admin_users").select("role").eq("id", user.id).maybeSingle();
-  if (error || data?.role !== "master") {
-    await db.auth.signOut();
-    show("login-panel");
-    message("login-message", "This account is not approved as the master admin.", "error");
-    return;
-  }
-  currentUser = user;
-  $("user-email").textContent = currentUser.email || "Master admin";
+async function unlock(key) {
+  await requestJSON(productsEndpoint + "?verify=1", {}, key);
+  sessionStorage.setItem(keyStoreName, key);
+  $("user-email").textContent = "Master administrator";
   show("dashboard");
   chooseBusiness(business);
 }
 async function init() {
-  if (!configured) {
-    show("setup-panel");
-    return;
-  }
+  show("login-panel");
   try {
-    const sdk = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
-    createClient = sdk.createClient;
-    db = createClient(config.supabaseUrl.replace(/\/$/, ""), config.publishableKey);
-    const { data, error } = await db.auth.getSession();
-    if (error) throw error;
-    if (data.session?.user) await authorize(data.session.user);
-    else show("login-panel");
-    db.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        currentUser = null;
-        show("login-panel");
-      }
-    });
+    const saved = getKey();
+    if (saved) {
+      await unlock(saved);
+      return;
+    }
+    await requestJSON(productsEndpoint + "?verify=1");
   } catch (error) {
-    show("setup-panel");
-    const setup = $("setup-panel");
-    const extra = document.createElement("p");
-    extra.textContent = "Connection error: " + (error.message || "Could not reach authentication.");
-    setup.append(extra);
+    if (error.status === 503) show("setup-panel");
+    else if (error.status !== 401) message("login-message", error.message, "error");
   }
 }
 $("login-form").addEventListener("submit", async event => {
@@ -252,25 +250,22 @@ $("login-form").addEventListener("submit", async event => {
   message("login-message", "");
   $("sign-in-button").disabled = true;
   try {
-    const { data, error } = await db.auth.signInWithPassword({
-      email: $("email").value.trim(),
-      password: $("password").value
-    });
-    if (error) throw error;
-    await authorize(data.user);
-    $("password").value = "";
+    await unlock($("admin-key").value.trim());
+    $("admin-key").value = "";
   } catch (error) {
-    message("login-message", error.message || "Sign-in failed.", "error");
+    if (error.status === 503) show("setup-panel");
+    else message("login-message", error.message || "Sign-in failed.", "error");
   } finally {
     $("sign-in-button").disabled = false;
   }
 });
-$("sign-out-button").addEventListener("click", async () => {
-  if (db) await db.auth.signOut();
-  currentUser = null;
+$("sign-out-button").addEventListener("click", () => {
+  sessionStorage.removeItem(keyStoreName);
   products = [];
+  resetEditor();
   show("login-panel");
 });
+
 all("[data-business]").forEach(button => button.addEventListener("click", () => chooseBusiness(button.dataset.business)));
 $("new-product").addEventListener("click", () => { resetEditor(); $("product-title").focus(); });
 $("reset-product").addEventListener("click", resetEditor);
