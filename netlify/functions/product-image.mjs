@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
-import { getStore } from "@netlify/blobs";
+import { openVSHStore } from "../lib/catalogue-store.mjs";
 import { authStatus, json, BUSINESSES } from "../lib/auth.mjs";
 
 const MAX_SIZE = 3 * 1024 * 1024; // conservative limit under Netlify's buffered request cap
 const MIME = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
 const keyRE = /^(grannys|clever-cubs)\/[0-9a-f-]{36}\.(jpg|png|webp)$/i;
-const store = () => getStore({ name: "vsh-product-images", consistency: "strong" });
+const store = () => openVSHStore({ name: "vsh-product-images", consistency: "strong" });
 export default async function handler(request) {
   const url = new URL(request.url);
   if (request.method === "GET") {
