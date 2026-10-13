@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
 const BUSINESSES = {
-  grannys: { label: "GRANNY’S", categories: ["Gourmet Popcorn", "Party Snacks", "Baked Goods", "Jars", "Other"] },
+  grannys: { label: "GRANNY’S", categories: ["Gourmet Popcorn", "Party Snacks", "Baked Goods", "Jars", "Recipe Books", "Other"] },
   "clever-cubs": { label: "CLEVER CUBS", categories: ["Preschool", "Primary School", "High School", "Life Skills", "Other"] }
 };
 const productsEndpoint = "/.netlify/functions/admin-products";
@@ -51,6 +51,7 @@ function resetEditor() {
   $("product-id").value = "";
   editingImagePath = "";
   $("editor-heading").textContent = "Add a product";
+  $("product-grade").placeholder = "e.g. Printed, Digital, Grade 4 or 250g";
   $("image-preview").hidden = true;
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
   previewObjectUrl = null;
@@ -71,6 +72,10 @@ function chooseBusiness(key) {
   business = key;
   sessionStorage.setItem("vsh-admin-business", business);
   $("current-business-label").textContent = BUSINESSES[business].label;
+  $("new-recipe-book").hidden = business !== "grannys";
+  $("category-helper").textContent = business === "grannys"
+    ? "Choose Recipe Books to list a book in Granny’s dedicated recipe-books section."
+    : "Choose a category so shoppers can find your learning resources.";
   all("[data-business]").forEach(button => {
     const selected = button.dataset.business === business;
     button.classList.toggle("selected", selected);
@@ -167,7 +172,9 @@ function editProduct(id) {
   $("product-grade").value = product.grade || "";
   $("product-active").checked = product.is_active;
   editingImagePath = product.image_path || "";
-  $("editor-heading").textContent = "Edit product";
+  $("editor-heading").textContent = business === "grannys" &&
+    /^recipe books?$/i.test(String(product.category || "").trim())
+      ? "Edit recipe book" : "Edit product";
   if (editingImagePath) {
     $("preview-img").src = imageUrl(editingImagePath);
     $("image-preview").hidden = false;
@@ -268,6 +275,15 @@ $("sign-out-button").addEventListener("click", () => {
 
 all("[data-business]").forEach(button => button.addEventListener("click", () => chooseBusiness(button.dataset.business)));
 $("new-product").addEventListener("click", () => { resetEditor(); $("product-title").focus(); });
+$("new-recipe-book").addEventListener("click", () => {
+  if (business !== "grannys") return;
+  resetEditor();
+  $("product-category").value = "Recipe Books";
+  $("editor-heading").textContent = "Add a recipe book";
+  $("product-grade").placeholder = "e.g. Printed book, Digital edition, 48 pages";
+  $("product-title").focus();
+  if (window.innerWidth < 850) $("product-form").scrollIntoView({ behavior: "smooth", block: "start" });
+});
 $("reset-product").addEventListener("click", resetEditor);
 $("search-products").addEventListener("input", drawProducts);
 $("product-form").addEventListener("submit", saveProduct);
