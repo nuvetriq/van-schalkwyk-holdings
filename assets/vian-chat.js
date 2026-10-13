@@ -150,8 +150,16 @@
   welcomeClose.addEventListener("click",()=>{greeting.hidden=true;});
   welcomeChat.addEventListener("click",()=>show(true));
   if(isHome && !getStored(localStorage,STORAGE_WELCOME)){
-    // Once per browser for the Holdings landing page ONLY. No popup on subpages.
-    putStored(localStorage,STORAGE_WELCOME,"yes");
-    setTimeout(()=>{if(panel.hidden && document.visibilityState==="visible")greeting.hidden=false;},1100);
+    // Only the Holdings homepage greets first-time visitors. Mark it as seen
+    // only when actually shown (e.g. a background tab shouldn't consume it).
+    const showFirstWelcome=()=>{
+      if(document.visibilityState!=="visible" || !panel.hidden) return;
+      if(getStored(localStorage,STORAGE_WELCOME)) return;
+      greeting.hidden=false;
+      putStored(localStorage,STORAGE_WELCOME,"yes");
+      document.removeEventListener("visibilitychange",showFirstWelcome);
+    };
+    setTimeout(showFirstWelcome,1100);
+    document.addEventListener("visibilitychange",showFirstWelcome);
   }
 })();
