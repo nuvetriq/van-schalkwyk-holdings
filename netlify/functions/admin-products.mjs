@@ -29,6 +29,8 @@ function validate(input) {
   }
   // Only the recipe-book category supports downloadable PDFs.
   if (pdf && !/^recipe books?$/i.test(category)) throw Error("Only recipe books may have a PDF.");
+  if (business==="grannys" && /^recipe books?$/i.test(category) && input.is_active===true && !pdf)
+    throw Error("Please upload the private recipe PDF before publishing this book.");
 
   return {
     business, title, category, description, grade,
@@ -59,9 +61,8 @@ export default async function handler(request) {
         .filter(row => admin || row.is_active === true)
         .sort((a,b) => b.updated_at.localeCompare(a.updated_at));
       // Public clients only receive the approved display fields.
-      if (!admin) return json({ products: output.map(({ id, business, title, category, grade, description, price, image_path, is_active, updated_at }) => ({
-        id, business, title, category, grade, description, price, image_path, is_active, updated_at
-      })) });
+      if (!admin) return json({ products: output.map(({ id, business, title, category, grade, description, price, image_path, is_active, updated_at, pdf_path }) => ({
+        id, business, title, category, grade, description, price, image_path, is_active, updated_at, has_pdf: Boolean(pdf_path)\n      })) });
       return json({ products: output });
     } catch (error) {
       console.error("Product read failed:", error);
