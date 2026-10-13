@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { json } from "../lib/auth.mjs";
-import { productsStore, ordersStore, checkoutStore, privatePDFStore, UUID, isRecipe, cents, safeUrl, orderKey, checkoutKey } from "../lib/recipe-orders.mjs";
+import { productsStore, ordersStore, checkoutStore, privatePDFStore, UUID, isRecipe, cents, safeUrl, orderKey, checkoutKey, casOrder } from "../lib/recipe-orders.mjs";
 const MAX_CART = 4;
 export default async function handler(request) {
   if(request.method !== "POST") return json({error:"Method not allowed."},405);
@@ -46,7 +46,12 @@ export default async function handler(request) {
       return json({error:"Payment checkout could not be started. Please try again."},502);
     }
     await checkoutStore().setJSON(checkoutKey(data.id),{orderId:id,checkoutId:data.id,amount,created_at:created},{onlyIfNew:true});
-    await ordersStore().setJSON(orderKey(id),{...order,checkoutId:data.id,status:"awaiting_payment",updated_at:new Date().toISOString()});
+    await casOrder(id,current=>{
+      if(current.checkoutId && current.checkoutId!==data.id) return null;
+      return {...current,checkoutId:data.id,
+        status:current.status==="checkout_pending" ? "awaiting_payment" : current.status,
+        updated_at:new Date().toISOString()};
+    });
     return json({orderId:id,redirectUrl:safeUrl(data.redirectUrl)},201);
   } catch(error) {
     console.error("Recipe book checkout error",error);
