@@ -1,0 +1,11 @@
+{
+  "name": "van-schalkwyk-holdings",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.4"
+  }
+}

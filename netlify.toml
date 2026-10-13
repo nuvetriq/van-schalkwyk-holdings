@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The built dist directory contains public pages/assets only.
+# OPENAI_API_KEY belongs in the Netlify UI environment variables, never here.
