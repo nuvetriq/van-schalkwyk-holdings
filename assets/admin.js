@@ -29,7 +29,7 @@ let previewObjectUrl = null;
 if (!BUSINESSES[business]) business = "grannys";
 
 function show(id) {
-  ["setup-panel", "login-panel", "dashboard"].forEach(name => $(name).hidden = name !== id);
+  ["login-panel", "dashboard"].forEach(name => $(name).hidden = name !== id);
 }
 function message(id, text, type = "") {
   const el = $(id);
@@ -290,7 +290,24 @@ async function saveProduct(event) {
     setBusy(false);
   }
 }
+function loginFailure(error) {
+  if (error.status === 503) {
+    return "Admin login is not available in this deployment yet. Make sure VSH_ADMIN_KEY is at least 32 characters, available to Netlify Functions in Deploy Previews, then trigger a new preview deployment.";
+  }
+  if (error.status === 401) {
+    return "That admin key wasn't recognised. Check that it matches your Netlify secret exactly, including capital letters.";
+  }
+  if (error.status === 404) {
+    return "The admin login service isn't available on this deployment. Please rebuild the Deploy Preview.";
+  }
+  return error.message || "Couldn't connect to the admin login. Please try again.";
+}
 async function unlock(key) {
+  if (key.length < 32) {
+    const error = new Error("Your admin key must contain at least 32 characters. Update VSH_ADMIN_KEY in Netlify and rebuild this Deploy Preview.");
+    error.status = 400;
+    throw error;
+  }
   await requestJSON(productsEndpoint + "?verify=1", {}, key);
   sessionStorage.setItem(keyStoreName, key);
   $("user-email").textContent = "Master administrator";
@@ -307,8 +324,9 @@ async function init() {
     }
     await requestJSON(productsEndpoint + "?verify=1");
   } catch (error) {
-    if (error.status === 503) show("setup-panel");
-    else if (error.status !== 401) message("login-message", error.message, "error");
+    // 401 is expected when probing an authenticated endpoint without a key.
+    // Keep the login page visible instead of showing a second setup panel.
+    if (error.status !== 401) message("login-message", loginFailure(error), "error");
   }
 }
 $("login-form").addEventListener("submit", async event => {
@@ -319,8 +337,7 @@ $("login-form").addEventListener("submit", async event => {
     await unlock($("admin-key").value.trim());
     $("admin-key").value = "";
   } catch (error) {
-    if (error.status === 503) show("setup-panel");
-    else message("login-message", error.message || "Sign-in failed.", "error");
+    message("login-message", loginFailure(error), "error");
   } finally {
     $("sign-in-button").disabled = false;
   }
