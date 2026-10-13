@@ -1,0 +1,74 @@
+#grannys-live-products[hidden]{display:none}#grannys-live-products{padding:56px max(24px,calc((100vw - 1200px)/2));background:#fff9f7}#grannys-live-products h2{font-family:Georgia,serif;color:#602e37;font-size:clamp(26px,3vw,40px);margin:5px 0 10px}#grannys-live-products .g-live-lede{color:#8c6268;max-width:650px;line-height:1.6}.g-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px;margin-top:24px}.g-live-card{background:#fff;border:1px solid #eddcd7;border-radius:20px;overflow:hidden;box-shadow:0 12px 26px #7b333a12}.g-live-photo{height:210px;background:linear-gradient(135deg,#f9e6e5,#f2cdcc);display:grid;place-items:center;color:#bd717a;font-size:60px}.g-live-photo img{width:100%;height:100%;object-fit:cover}.g-live-body{padding:20px}.g-live-body small{display:block;text-transform:uppercase;color:#ba6d7b;font-size:11px;font-weight:900;letter-spacing:.12em}.g-live-body h3{font-family:Georgia,serif;font-size:23px;margin:7px 0 8px;color:#612f3a}.g-live-body p{color:#876b6b;font-size:14px;line-height:1.5;min-height:42px}.g-live-footer{border-top:1px solid #f3e1dd;padding-top:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.g-live-footer b{color:#5b2b38}.g-live-footer a{font-size:12px;font-weight:900;color:#b24863;text-decoration:none}@media(max-width:830px){.g-live-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.g-live-grid{grid-template-columns:1fr}.g-live-photo{height:240px}}
+
+
+/* Granny's recipe books: a separate editorial-style bookshop within the bakery. */
+.gr-recipe-section{position:relative;overflow:hidden;background:#fffaf4;color:#59333a;border-top:1px solid #f0ded6}
+.gr-recipe-intro{display:grid;grid-template-columns:minmax(0,1.13fr) minmax(280px,.87fr);align-items:center;gap:32px;max-width:1200px;margin:auto;padding:68px 26px 54px}
+.gr-recipe-kicker{color:#b26271!important;font-size:11px!important;letter-spacing:.2em;text-transform:uppercase;font-weight:850!important;line-height:1.5;margin:0 0 14px!important}
+.gr-recipe-copy{position:relative;z-index:1}
+.gr-recipe-copy h2{font-family:Georgia,"Times New Roman",serif!important;color:#5e2b38!important;font-weight:600!important;font-size:clamp(34px,4.5vw,61px)!important;line-height:1.12!important;letter-spacing:-.035em;margin:0 0 19px!important;max-width:650px}
+.gr-recipe-copy h2 em{font-style:italic;color:#bc7282}
+.gr-recipe-copy>p:not(.gr-recipe-kicker){max-width:525px;color:#846367;font-size:16px;line-height:1.8;margin:0 0 26px}
+.gr-recipe-contact{display:inline-flex;align-items:center;gap:15px;min-height:46px;border-radius:999px;padding:12px 21px;background:#633542;color:#fff!important;font-size:13px;font-weight:800;text-decoration:none!important;transition:background .2s,transform .2s}
+.gr-recipe-contact:hover{background:#a95069;transform:translateY(-2px)}
+.gr-recipe-illustration{position:relative;height:350px;display:flex;align-items:center;justify-content:center;border-radius:32px;background:radial-gradient(ellipse at 49% 45%,#ffe9db 0,#fce8df 40%,#f9e8e0 72%,#fbefe6 100%)}
+.gr-recipe-illustration:before,.gr-recipe-illustration:after{position:absolute;content:"";width:125px;height:125px;border:1px solid #d4a7a8;border-radius:50%;opacity:.28}
+.gr-recipe-illustration:before{left:8%;bottom:9%}.gr-recipe-illustration:after{right:7%;top:8%;width:65px;height:65px}
+.gr-recipe-book{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:222px;height:286px;padding:20px 16px;color:#713b4c;background:linear-gradient(92deg,#c66e83 0,#e8a4ad 4%,#fdf6eb 9%,#fff8ed 100%);border:1px solid #d9aaae;border-left:8px solid #bd657a;border-radius:4px 10px 10px 4px;box-shadow:16px 22px 35px #8f475041,4px 7px 1px #e8babc;transform:rotate(-9deg)}
+.gr-recipe-book:before{content:"";position:absolute;inset:14px 13px 12px 8px;border:1px solid #dbb6b5;border-radius:3px;pointer-events:none}
+.gr-recipe-book-top{font-size:10px;letter-spacing:.24em;font-weight:900}
+.gr-recipe-book-flower{font-size:41px;line-height:1.8;color:#d68a99}
+.gr-recipe-book-title{font-family:Georgia,serif;font-size:34px;line-height:1.1;font-style:italic}
+.gr-recipe-book-subtitle{font-size:9px;letter-spacing:.07em;margin-top:18px}
+.gr-recipe-book-shadow{position:absolute;width:260px;height:32px;bottom:17px;left:calc(50% - 130px);border-radius:50%;background:#a5595d26;filter:blur(9px)}
+.gr-recipe-sparkle{position:absolute;color:#c67486;font-size:38px}.sparkle-one{right:16%;top:19%}.sparkle-two{left:18%;bottom:24%;font-size:30px}
+.gr-recipe-collection{max-width:1200px;padding:0 26px 78px;margin:auto}
+.gr-recipe-collection-head{display:flex;align-items:end;justify-content:space-between;gap:12px;border-top:1px solid #eddad4;padding-top:30px}
+.gr-recipe-collection-head h3{font-family:Georgia,serif;color:#663343;font-size:clamp(26px,3vw,36px);line-height:1.1;margin:0}
+.gr-recipe-collection-note{font-family:Georgia,serif;font-size:15px;color:#b87885;font-style:italic}
+.gr-recipe-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:28px}
+.gr-recipe-card{background:#fff;overflow:hidden;border-radius:19px;border:1px solid #f1e0d9;box-shadow:0 12px 28px #653b3212;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+.gr-recipe-card:hover{transform:translateY(-4px);box-shadow:0 20px 36px #653b3222}
+.gr-recipe-card-image{background:linear-gradient(145deg,#ffece7,#f8d6db);height:275px;display:grid;place-items:center;padding:17px}
+.gr-recipe-card-image img{display:block;max-height:100%;max-width:100%;object-fit:contain;border-radius:3px;filter:drop-shadow(8px 10px 9px #652d3428)}
+.gr-recipe-cover-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;height:212px;width:162px;border-left:7px solid #b76c80;background:linear-gradient(90deg,#f9e1df,#fff9e8);box-shadow:9px 12px 15px #652d3433;color:#724251;padding:15px;font-family:Georgia,serif;font-size:20px;overflow-wrap:anywhere}
+.gr-recipe-cover-fallback:before{content:"✿";font-family:serif;font-size:34px;color:#c97c8f}
+.gr-recipe-card-body{display:flex;flex-direction:column;flex:1;padding:23px 22px 22px}
+.gr-recipe-card-meta{color:#b97083!important;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px!important}
+.gr-recipe-card h4{font-family:Georgia,serif;color:#633440;font-size:24px;line-height:1.22;margin:0 0 10px;overflow-wrap:anywhere}
+.gr-recipe-card-description{font-size:14px;line-height:1.65;color:#84676b;margin:0 0 21px;flex:1;white-space:pre-line}
+.gr-recipe-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid #f1e5e1;padding-top:18px}
+.gr-recipe-card-price{font-size:19px;color:#613541}
+.gr-recipe-card-action{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:850;color:#a34d68;text-decoration:none;border-bottom:1px solid #d4a6b1;padding-bottom:3px}
+.gr-recipe-card-action:hover{color:#743046}
+.gr-recipe-empty{display:flex;align-items:center;gap:23px;margin-top:26px;padding:25px 27px;border:1px dashed #dab6b7;border-radius:19px;background:#fff9f8}
+.gr-recipe-empty[hidden]{display:none}
+.gr-recipe-empty-icon{height:62px;width:62px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:37px;background:#f9e6e7;color:#b86a7c}
+.gr-recipe-empty h4{font-family:Georgia,serif;font-size:23px;line-height:1.3;color:#754355;margin:0 0 5px}
+.gr-recipe-empty p{font-size:13px;line-height:1.7;color:#987b80;margin:0}
+@media(max-width:870px){.gr-recipe-intro{grid-template-columns:1fr;gap:30px;padding-top:48px}.gr-recipe-illustration{height:300px}.gr-recipe-book{transform:rotate(-7deg) scale(.85)}.gr-recipe-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}}
+@media(max-width:590px){.gr-recipe-intro{padding:42px 19px 27px}.gr-recipe-copy h2{font-size:35px!important}.gr-recipe-copy>p:not(.gr-recipe-kicker){font-size:14px}.gr-recipe-illustration{height:255px}.gr-recipe-book{transform:rotate(-8deg) scale(.73)}.gr-recipe-collection{padding:0 19px 55px}.gr-recipe-collection-head{align-items:start;flex-direction:column}.gr-recipe-collection-note{font-size:13px}.gr-recipe-grid{grid-template-columns:1fr;gap:18px}.gr-recipe-card-image{height:245px}.gr-recipe-empty{padding:19px;gap:13px}.gr-recipe-empty-icon{height:46px;width:46px;font-size:26px}.gr-recipe-empty h4{font-size:20px}}
+
+.gr-recipe-add{background:transparent;border:0;cursor:pointer;font-family:inherit}
+.gr-recipe-add:focus-visible{outline:3px solid #d4a6b1;outline-offset:3px}
+.gr-cart-floating{position:fixed;z-index:500;bottom:22px;right:22px;background:#653542;color:#fff;border:2px solid #fff;padding:15px 22px;border-radius:30px;font-size:14px;font-weight:800;box-shadow:0 10px 32px #4420295c;cursor:pointer}
+.gr-cart-floating[hidden]{display:none}
+.gr-cart-overlay{position:fixed;z-index:600;inset:0;background:#30202891;display:flex;align-items:center;justify-content:center;padding:16px}
+.gr-cart-overlay[hidden]{display:none}
+.gr-cart-panel{width:min(570px,100%);max-height:90vh;overflow:auto;border-radius:22px;padding:27px;background:#fffaf6;color:#603746;box-shadow:0 25px 100px #291b2a60}
+.gr-cart-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.gr-cart-head h2{font-size:30px;font-family:Georgia,serif;margin:0}
+.gr-cart-close{border:0;background:#f5e6e5;color:#663742;border-radius:50%;width:40px;height:40px;font-size:25px;cursor:pointer}
+.gr-cart-subtitle{font-size:13px;color:#926d75;margin:10px 0 19px}
+.gr-cart-lines{display:flex;flex-direction:column;gap:11px}
+.gr-cart-line{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #efdad7;background:white;border-radius:13px;padding:13px}
+.gr-cart-line strong{display:block;font-family:Georgia,serif}
+.gr-cart-line button{border:0;background:transparent;color:#a54f69;text-decoration:underline;cursor:pointer}
+.gr-cart-total{display:flex;justify-content:space-between;padding:18px 0;margin:16px 0 8px;border-top:1px solid #efdad7;border-bottom:1px solid #efdad7;font-size:19px}
+.gr-cart-panel label{display:block;font-size:13px;font-weight:800;margin:14px 0 7px}
+.gr-cart-panel input{width:100%;padding:13px;border:1px solid #e0c5ca;background:#fff;border-radius:10px;color:#603746;font-size:15px}
+.gr-cart-pay{margin-top:20px;width:100%;padding:15px;border:0;border-radius:12px;background:#643844;color:#fff;font-size:15px;font-weight:900;cursor:pointer}
+.gr-cart-pay:disabled{opacity:.6;cursor:wait}
+.gr-cart-note{font-size:12px;color:#8b7680;line-height:1.6}
+.gr-cart-error{font-size:13px;color:#ad3147;line-height:1.5;min-height:1.5em}
+@media(max-width:590px){.gr-cart-floating{right:14px;bottom:14px}.gr-cart-panel{padding:20px}.gr-cart-head h2{font-size:26px}}

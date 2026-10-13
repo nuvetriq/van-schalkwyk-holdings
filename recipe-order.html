@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-ZA"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Granny's recipe books | Order update</title>
+<link rel="stylesheet" href="assets/grannys-products.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#fff7f4;color:#683947;min-height:100vh;display:grid;place-items:center}
+main{max-width:630px;width:calc(100% - 32px);border:1px solid #e8ced0;background:#fff;padding:36px;border-radius:24px;box-sizing:border-box;box-shadow:0 20px 45px #77434b17;text-align:center}
+h1{font-family:Georgia,serif;font-size:clamp(30px,4vw,46px);line-height:1.15}
+p{line-height:1.7;color:#8c6470}a{color:#a55166;font-weight:800}
+.reference{font-size:11px;overflow-wrap:anywhere}
+</style>
+</head><body><main><p>♡ GRANNY'S RECIPE BOOKS ♡</p>
+<h1 id="result-title">Checking your order…</h1>
+<p id="result-message">We are waiting for Yoco to confirm the payment. Please do not pay again unless your payment has failed.</p>
+<p class="reference" id="order-reference"></p>
+<a href="grannys-little-bakery.html#recipe-books">← Return to recipe books</a>
+</main><script>
+(() => {
+ const params=new URLSearchParams(location.search), id=params.get("order")||"";
+ const title=document.getElementById("result-title"), message=document.getElementById("result-message");
+ if(!/^[0-9a-f-]{36}$/i.test(id)){title.textContent="Order not found";message.textContent="Please contact Granny's if you need help.";return;}
+ document.getElementById("order-reference").textContent="Order reference: "+id;
+ let tries=0;
+ async function check(){
+  try{
+   const res=await fetch("/.netlify/functions/recipe-order-status?order="+encodeURIComponent(id),{cache:"no-store"});
+   if(!res.ok)throw Error("Order lookup unavailable");
+   const data=await res.json();
+   if(data.emailSent){
+    sessionStorage.removeItem("grannys-recipe-basket-v1");
+    title.textContent="Your books are on their way! ♡";
+    message.textContent="Payment confirmed. We've sent your purchased PDF books to the email you entered at checkout. Please check your inbox and spam folder.";return;
+   }
+   if(data.status==="paid"){
+    sessionStorage.removeItem("grannys-recipe-basket-v1");
+    title.textContent="Payment received!";
+    message.textContent="Thank you! We're preparing your recipe book email now. If it doesn't arrive, please contact Granny's with your order reference.";
+   }else if(params.has("cancelled")||params.has("failed")){
+    title.textContent="Your checkout wasn't completed";
+    message.textContent="No confirmed payment is recorded yet. You can return to the recipe books if you'd like to try again.";
+   }else{
+    title.textContent="Verifying your payment";
+    message.textContent="Please check your email shortly. We'll send the recipe PDFs once Yoco confirms the payment.";
+   }
+  }catch{title.textContent="Order update unavailable";message.textContent="If you have paid, please do not pay again. Contact Granny's with your order reference.";}
+  if(++tries<30)setTimeout(check,5000);
+ }
+ check();
+})();
+</script></body></html>
