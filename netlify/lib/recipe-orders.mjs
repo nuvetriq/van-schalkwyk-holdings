@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
-import { getStore } from "@netlify/blobs";
-export const productsStore = () => getStore({ name:"vsh-products", consistency:"strong" });
-export const ordersStore = () => getStore({ name:"vsh-recipe-orders", consistency:"strong" });
-export const checkoutStore = () => getStore({ name:"vsh-yoco-checkouts", consistency:"strong" });
-export const privatePDFStore = () => getStore({ name:"vsh-private-recipe-pdfs", consistency:"strong" });
+import { openVSHStore } from "./catalogue-store.mjs";
+export const productsStore = () => openVSHStore({ name:"vsh-products", consistency:"strong" });
+export const ordersStore = () => openVSHStore({ name:"vsh-recipe-orders", consistency:"strong" });
+export const checkoutStore = () => openVSHStore({ name:"vsh-yoco-checkouts", consistency:"strong" });
+export const privatePDFStore = () => openVSHStore({ name:"vsh-private-recipe-pdfs", consistency:"strong" });
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const isRecipe = p => p?.business === "grannys" && /^recipe books?$/i.test(String(p.category || "").trim());
 export const orderKey = id => "order/" + id + ".json";
