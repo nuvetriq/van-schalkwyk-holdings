@@ -181,3 +181,11 @@ body:has(#login-panel:not([hidden])) .wrap {
     width:58px;height:58px;min-width:58px;border-radius:14px;padding:3px;
   }
 }
+
+/* Clear customer-facing launch status without visual alarm or admin distraction. */
+.catalogue-notice{
+  background:#fffaf1;border:1px solid #ead8af;border-radius:13px;
+  padding:13px 17px;color:#67533b;font-size:13px;line-height:1.6;
+  margin:5px 0 20px;
+}
+.catalogue-notice strong{color:#483727}
