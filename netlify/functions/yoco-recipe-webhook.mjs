@@ -16,7 +16,7 @@ export default async function handler(request) {
     const map=await checkoutStore().get(checkoutKey(checkoutId),{type:"json"});
     if(!map?.orderId) return json({error:"Checkout record not yet available"},503);
     const order=await ordersStore().get(orderKey(map.orderId),{type:"json"});
-    if(!order || order.checkoutId!==checkoutId || map.amount!==order.amount ||
+    if(!order || (order.checkoutId && order.checkoutId!==checkoutId) || map.amount!==order.amount ||
         data.status!=="succeeded" || data.currency!=="ZAR" ||
         Number(data.amount)!==order.amount ||
         (data.mode==="test" && !process.env.YOCO_SECRET_KEY?.startsWith("sk_test_")) ||
@@ -26,8 +26,8 @@ export default async function handler(request) {
     }
     await casOrder(order.id,current=>{
       if(current.status==="paid")return null;
-      if(current.status!=="awaiting_payment")return null;
-      return {...current,status:"paid",paid_at:new Date().toISOString(),
+      if(!["awaiting_payment","checkout_pending"].includes(current.status))return null;
+      return {...current,checkoutId,status:"paid",paid_at:new Date().toISOString(),
         payment_id:String(data.id||"").slice(0,160),updated_at:new Date().toISOString()};
     });
     const confirmed=await ordersStore().get(orderKey(order.id),{type:"json"});
