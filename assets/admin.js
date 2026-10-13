@@ -37,7 +37,9 @@ function message(id, text, type = "") {
   el.className = "message" + (type ? " " + type : "");
 }
 function setBusy(busy) {
-  $("save-product").disabled = busy;
+  for (const control of [$("save-product"), $("reset-product"), $("new-product"),
+    $("new-recipe-book"), $("new-clever-book"), ...all("[data-business]")])
+      control.disabled = busy;
   $("save-product").textContent = busy ? "Saving…" : "Save product";
 }
 function fmtPrice(value) {
@@ -47,11 +49,21 @@ function imageUrl(path) {
   if (!path) return "";
   return imagesEndpoint + "?key=" + encodeURIComponent(path);
 }
+function isDigitalBook() {
+  return business === "clever-cubs" ||
+    (business === "grannys" && /^recipe books?$/i.test($("product-category").value.trim()));
+}
 function refreshPdfControls() {
-  const isRecipe = business === "grannys" && /^recipe books?$/i.test($("product-category").value.trim());
-  $("recipe-pdf-controls").hidden = !isRecipe;
-  if (isRecipe && editingPdfPath) $("pdf-status").textContent = "Private PDF attached. Upload another file to replace it.";
-  else if (isRecipe) $("pdf-status").textContent = "Choose the PDF buyers will receive automatically after verified payment.";
+  const book = isDigitalBook();
+  $("book-pdf-controls").hidden = !book;
+  $("pdf-label").textContent = business === "clever-cubs"
+    ? "Clever Cubs learning book PDF (private, max 3 MB)"
+    : "Granny's recipe book PDF (private, max 3 MB)";
+  $("remove-pdf-wrapper").hidden = !book || !editingPdfPath;
+  if (book && editingPdfPath) $("pdf-status").textContent =
+    "Private PDF attached to this listing. Choose another PDF to replace it.";
+  else if (book) $("pdf-status").textContent =
+    "No private PDF attached yet. Upload a PDF before publishing this book.";
 }
 function resetEditor() {
   $("product-form").reset();
@@ -83,6 +95,8 @@ function chooseBusiness(key) {
   sessionStorage.setItem("vsh-admin-business", business);
   $("current-business-label").textContent = BUSINESSES[business].label;
   $("new-recipe-book").hidden = business !== "grannys";
+  $("new-clever-book").hidden = business !== "clever-cubs";
+  $("new-product").hidden = business === "clever-cubs";
   $("category-helper").textContent = business === "grannys"
     ? "Choose Recipe Books to list a book in Granny’s dedicated recipe-books section."
     : "Choose a category so shoppers can find your learning resources.";
@@ -130,7 +144,10 @@ function drawProducts() {
     const name = document.createElement("b");
     name.textContent = product.title;
     const details = document.createElement("small");
-    details.textContent = [product.category, product.grade].filter(Boolean).join(" · ") || "Uncategorised";
+    details.textContent = [product.category, product.grade,
+      product.pdf_path ? "Private PDF attached" :
+      (product.business === "clever-cubs" || /^recipe books?$/i.test(product.category)) ? "PDF not attached" : ""
+    ].filter(Boolean).join(" · ") || "Uncategorised";
     info.append(name, details);
     const right = document.createElement("div");
     right.className = "product-side";
@@ -184,9 +201,8 @@ function editProduct(id) {
   editingImagePath = product.image_path || "";
   editingPdfPath = product.pdf_path || "";
   refreshPdfControls();
-  $("editor-heading").textContent = business === "grannys" &&
-    /^recipe books?$/i.test(String(product.category || "").trim())
-      ? "Edit recipe book" : "Edit product";
+  $("editor-heading").textContent = business === "clever-cubs" ? "Edit learning book" :
+    /^recipe books?$/i.test(String(product.category || "").trim()) ? "Edit recipe book" : "Edit product";
   if (editingImagePath) {
     $("preview-img").src = imageUrl(editingImagePath);
     $("image-preview").hidden = false;
@@ -207,10 +223,25 @@ async function saveProduct(event) {
     message("form-message", "Choose a JPG, PNG or WebP image no larger than 3 MB.", "error");
     return;
   }
-  const isRecipe = business === "grannys" && /^recipe books?$/i.test($("product-category").value.trim());
-  const pdfFile = isRecipe ? $("product-pdf").files[0] : null;
-  if (pdfFile && (pdfFile.type !== "application/pdf" || pdfFile.size > 3 * 1024 * 1024)) {
-    message("form-message", "Choose a PDF no larger than 3 MB.", "error");
+  const selectedBusiness = business;
+  const isBook = isDigitalBook();
+  const pdfFile = isBook ? $("product-pdf").files[0] : null;
+  const detach = isBook && $("remove-pdf").checked;
+  if (pdfFile && detach) {
+    message("form-message", "Choose either a replacement PDF or detach the old one, not both.", "error");
+    return;
+  }
+  if (pdfFile && (!["application/pdf", ""].includes(pdfFile.type) ||
+      !/\.pdf$/i.test(pdfFile.name) || pdfFile.size < 8 || pdfFile.size > 3 * 1024 * 1024)) {
+    message("form-message", "Choose a PDF file no larger than 3 MB.", "error");
+    return;
+  }
+  if (isBook && $("product-active").checked && !pdfFile && (!editingPdfPath || detach)) {
+    message("form-message", "Please attach a PDF before publishing this digital book.", "error");
+    return;
+  }
+  if (isBook && $("product-active").checked && price < 1) {
+    message("form-message", "Published digital books need a price of at least R1.00.", "error");
     return;
   }
   setBusy(true);
@@ -218,20 +249,22 @@ async function saveProduct(event) {
     let path = editingImagePath;
     if (file) {
       const data = new FormData();
-      data.set("business", business);
+      data.set("business", selectedBusiness);
       data.set("file", file);
       const uploaded = await requestJSON(imagesEndpoint, { method: "POST", body: data });
       path = uploaded.image_path;
     }
-    let pdfPath = isRecipe ? editingPdfPath : "";
+    let pdfPath = isBook && !detach ? editingPdfPath : "";
     if (pdfFile) {
       const form = new FormData();
+      form.set("business", selectedBusiness);
       form.set("file", pdfFile);
-      const response = await requestJSON("/.netlify/functions/recipe-pdf", { method:"POST", body: form });
+      const response = await requestJSON("/.netlify/functions/book-pdf",
+        { method: "POST", body: form });
       pdfPath = response.pdf_path;
     }
     const payload = {
-      business,
+      business: selectedBusiness,
       title: $("product-title").value.trim(),
       category: $("product-category").value.trim(),
       description: $("product-description").value.trim(),
@@ -311,9 +344,30 @@ $("new-recipe-book").addEventListener("click", () => {
   $("product-title").focus();
   if (window.innerWidth < 850) $("product-form").scrollIntoView({ behavior: "smooth", block: "start" });
 });
+$("new-clever-book").addEventListener("click", () => {
+  if (business !== "clever-cubs") return;
+  resetEditor();
+  $("product-category").value = "Primary School";
+  refreshPdfControls();
+  $("editor-heading").textContent = "Add a learning book";
+  $("product-grade").placeholder = "e.g. Grade 3 or Foundation Phase";
+  $("product-title").focus();
+  if (window.innerWidth < 850) $("product-form").scrollIntoView({ behavior: "smooth", block: "start" });
+});
 $("reset-product").addEventListener("click", resetEditor);
 $("search-products").addEventListener("input", drawProducts);
 $("product-category").addEventListener("input", refreshPdfControls);
+$("product-pdf").addEventListener("change", event => {
+  if (event.target.files[0]) $("pdf-status").textContent =
+    "Selected file: " + event.target.files[0].name + " (private; not published for download).";
+  else refreshPdfControls();
+});
+$("remove-pdf").addEventListener("change", event => {
+  if (event.target.checked) {
+    $("product-pdf").value = "";
+    $("pdf-status").textContent = "The PDF will be detached when you save as a draft. Previously sold PDFs remain stored privately.";
+  } else refreshPdfControls();
+});
 $("product-form").addEventListener("submit", saveProduct);
 $("product-image").addEventListener("change", event => {
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
