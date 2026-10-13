@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { getStore } from "@netlify/blobs";
+import { openVSHStore } from "../lib/catalogue-store.mjs";
 import { json } from "../lib/auth.mjs";
 import { VIAN_BUSINESS_KNOWLEDGE, getPublicProductKnowledge } from "../lib/vian-knowledge.mjs";
 
@@ -14,7 +14,7 @@ function configuredLimit(name, fallback, min=1, max=10000) {
 const IP_DAILY_LIMIT=configuredLimit("VIAN_IP_DAILY_LIMIT",20);
 const IP_HOURLY_LIMIT=configuredLimit("VIAN_IP_HOURLY_LIMIT",10);
 const GLOBAL_DAILY_LIMIT=configuredLimit("VIAN_DAILY_REQUEST_LIMIT",100);
-const usageStore=()=>getStore({name:"vsh-vian-daily-limits",consistency:"strong"});
+const usageStore=()=>openVSHStore({name:"vsh-vian-daily-limits",consistency:"strong"});
 const clean=value=>String(value||"").trim();
 function instructions(publicProducts) {
  return `You are VIAN (Van Schalkwyk Holdings Intelligence Network), a cute, welcoming, clever robot holding a clipboard, with big friendly eyes and gold-rimmed glasses. You are the family-business guide on the official Van Schalkwyk Holdings website in South Africa. Your tone is warm, upbeat, helpful and professional, with a touch of playful charm. You are an AI, not a human.
