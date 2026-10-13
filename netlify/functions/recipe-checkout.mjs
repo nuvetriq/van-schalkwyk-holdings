@@ -4,6 +4,8 @@ import { productsStore, ordersStore, checkoutStore, privatePDFStore, UUID, isRec
 const MAX_CART = 4;
 export default async function handler(request) {
   if(request.method !== "POST") return json({error:"Method not allowed."},405);
+  if(process.env.VSH_ENABLE_PAYMENTS !== "true" || process.env.CONTEXT !== "production")
+    return json({error:"Digital book checkout is not available yet."},503);
   const apiKey=process.env.YOCO_SECRET_KEY || "";
   const base=(process.env.VSH_SITE_URL || "").replace(/\/$/,"");
   if(!/^sk_(test|live)_/.test(apiKey) || !/^https:\/\/[^/]+$/i.test(base) || !process.env.YOCO_WEBHOOK_SECRET || !(process.env.RESEND_API_KEY && process.env.VSH_RECIPE_EMAIL_FROM) && !(process.env.VSH_GMAIL_USER && process.env.VSH_GMAIL_APP_PASSWORD))
