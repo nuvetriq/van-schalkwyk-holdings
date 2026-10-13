@@ -64,3 +64,8 @@
  .vian-widget .vian-chat-hero img{width:70px;height:70px}
 }
 @media(prefers-reduced-motion:reduce){.vian-widget *, .vian-widget *:before,.vian-widget *:after{animation:none!important;transition:none!important}}
+
+/* Keep Vian away from shopping basket buttons and disable him during checkout overlays. */
+body.ccl-cart-open .vian-widget,body.ccl-checkout-open .vian-widget{display:none}
+body:has(.gr-cart-overlay:not([hidden])) .vian-widget{display:none}
+@media(max-width:600px){body.vian-has-basket .vian-widget .vian-chat{height:min(565px,calc(100dvh - 105px))}}
