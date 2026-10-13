@@ -27,10 +27,12 @@ p{line-height:1.7;color:#8c6470}a{color:#a55166;font-weight:800}
    if(!res.ok)throw Error("Order lookup unavailable");
    const data=await res.json();
    if(data.emailSent){
+    sessionStorage.removeItem("grannys-recipe-basket-v1");
     title.textContent="Your books are on their way! ♡";
     message.textContent="Payment confirmed. We've sent your purchased PDF books to the email you entered at checkout. Please check your inbox and spam folder.";return;
    }
    if(data.status==="paid"){
+    sessionStorage.removeItem("grannys-recipe-basket-v1");
     title.textContent="Payment received!";
     message.textContent="Thank you! We're preparing your recipe book email now. If it doesn't arrive, please contact Granny's with your order reference.";
    }else if(params.has("cancelled")||params.has("failed")){
