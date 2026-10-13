@@ -2,6 +2,9 @@
 
 **This work is a draft, not deployed or tested with a live Yoco merchant account.**
 
+**Payment safety switch (October 2026):** Yoco checkout creation, Yoco webhook processing and scheduled PDF email sending are now **OFF by default**, even on Deploy Previews. Enabling future paid fulfillment requires the Netlify Functions environment variable `VSH_ENABLE_PAYMENTS=true` **and** a production-context deployment, in addition to all verified Yoco/email secrets and transaction safeguards. Do not enable it while this work is unfinished. Clever Cubs PDF files are supported by the shared admin editor, but a real Clever Cubs Yoco checkout and verified email fulfillment must still be built and tested.
+
+
 ## Customer flow
 
 1. Add a recipe book in the master admin, with a public cover and a private PDF (max 3 MB). Publish only after uploading the PDF.
