@@ -3,9 +3,11 @@
    The OpenAI key is always server-side in the Netlify Function. */
 (() => {
   "use strict";
-  const path = location.pathname.replace(/\/+/g,"/");
-  const page = path.endsWith("grannys-little-bakery.html") ? "grannys" :
-    path.endsWith("clever-cubs-learning.html") ? "clever-cubs" : "home";
+  // Netlify uses pretty URLs on production: /grannys-little-bakery
+  // and /clever-cubs-learning (often without the .html suffix).
+  const path = location.pathname.replace(/\/+/g,"/").replace(/\/$/,"") || "/";
+  const page = /\/grannys-little-bakery(?:\.html)?$/i.test(path) ? "grannys" :
+    /\/clever-cubs-learning(?:\.html)?$/i.test(path) ? "clever-cubs" : "home";
   const isHome = page === "home";
   if(!isHome) document.body.classList.add("vian-has-basket");
   const STORAGE_CHAT = "vsh_vian_chat_v1";
@@ -122,7 +124,8 @@
     try{
       const response=await fetch("/.netlify/functions/vian-chat",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({message:text,history:prior,sourcePage:location.pathname==="/" ? "/" : location.pathname})
+        body:JSON.stringify({message:text,history:prior,sourcePage:page==="grannys" ? "/grannys-little-bakery" :
+          page==="clever-cubs" ? "/clever-cubs-learning" : "/"})
       });
       const data=await response.json().catch(()=>({}));
       loading.remove();
@@ -149,14 +152,15 @@
   });
   welcomeClose.addEventListener("click",()=>{greeting.hidden=true;});
   welcomeChat.addEventListener("click",()=>show(true));
-  if(isHome && !getStored(localStorage,STORAGE_WELCOME)){
-    // Only the Holdings homepage greets first-time visitors. Mark it as seen
-    // only when actually shown (e.g. a background tab shouldn't consume it).
+  if(isHome && !getStored(sessionStorage,STORAGE_WELCOME)){
+    // Show at most once per browser-tab visit, only on the Holdings homepage.
+    // A new tab/visit can show the greeting again, while moving between
+    // Holdings, Granny's, Clever Cubs and external Nuvetriq will not.
     const showFirstWelcome=()=>{
       if(document.visibilityState!=="visible" || !panel.hidden) return;
-      if(getStored(localStorage,STORAGE_WELCOME)) return;
+      if(getStored(sessionStorage,STORAGE_WELCOME)) return;
       greeting.hidden=false;
-      putStored(localStorage,STORAGE_WELCOME,"yes");
+      putStored(sessionStorage,STORAGE_WELCOME,"yes");
       document.removeEventListener("visibilitychange",showFirstWelcome);
     };
     setTimeout(showFirstWelcome,1100);
