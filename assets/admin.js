@@ -24,6 +24,7 @@ async function requestJSON(url, options = {}, key = getKey()) {
 let business = new URLSearchParams(location.search).get("business") || sessionStorage.getItem("vsh-admin-business") || "grannys";
 let products = [];
 let editingImagePath = "";
+let editingPdfPath = "";
 let previewObjectUrl = null;
 if (!BUSINESSES[business]) business = "grannys";
 
@@ -46,10 +47,18 @@ function imageUrl(path) {
   if (!path) return "";
   return imagesEndpoint + "?key=" + encodeURIComponent(path);
 }
+function refreshPdfControls() {
+  const isRecipe = business === "grannys" && /^recipe books?$/i.test($("product-category").value.trim());
+  $("recipe-pdf-controls").hidden = !isRecipe;
+  if (isRecipe && editingPdfPath) $("pdf-status").textContent = "Private PDF attached. Upload another file to replace it.";
+  else if (isRecipe) $("pdf-status").textContent = "Choose the PDF buyers will receive automatically after verified payment.";
+}
 function resetEditor() {
   $("product-form").reset();
   $("product-id").value = "";
   editingImagePath = "";
+  editingPdfPath = "";
+  $("pdf-status").textContent = "Upload the private PDF that will be emailed after a verified payment.";
   $("editor-heading").textContent = "Add a product";
   $("product-grade").placeholder = "e.g. Printed, Digital, Grade 4 or 250g";
   $("image-preview").hidden = true;
@@ -57,6 +66,7 @@ function resetEditor() {
   previewObjectUrl = null;
   $("preview-img").removeAttribute("src");
   message("form-message", "");
+  refreshPdfControls();
 }
 function updateCategorySuggestions() {
   const list = $("category-suggestions");
@@ -172,6 +182,8 @@ function editProduct(id) {
   $("product-grade").value = product.grade || "";
   $("product-active").checked = product.is_active;
   editingImagePath = product.image_path || "";
+  editingPdfPath = product.pdf_path || "";
+  refreshPdfControls();
   $("editor-heading").textContent = business === "grannys" &&
     /^recipe books?$/i.test(String(product.category || "").trim())
       ? "Edit recipe book" : "Edit product";
@@ -195,6 +207,12 @@ async function saveProduct(event) {
     message("form-message", "Choose a JPG, PNG or WebP image no larger than 3 MB.", "error");
     return;
   }
+  const isRecipe = business === "grannys" && /^recipe books?$/i.test($("product-category").value.trim());
+  const pdfFile = isRecipe ? $("product-pdf").files[0] : null;
+  if (pdfFile && (pdfFile.type !== "application/pdf" || pdfFile.size > 3 * 1024 * 1024)) {
+    message("form-message", "Choose a PDF no larger than 3 MB.", "error");
+    return;
+  }
   setBusy(true);
   try {
     let path = editingImagePath;
@@ -205,6 +223,13 @@ async function saveProduct(event) {
       const uploaded = await requestJSON(imagesEndpoint, { method: "POST", body: data });
       path = uploaded.image_path;
     }
+    let pdfPath = isRecipe ? editingPdfPath : "";
+    if (pdfFile) {
+      const form = new FormData();
+      form.set("file", pdfFile);
+      const response = await requestJSON("/.netlify/functions/recipe-pdf", { method:"POST", body: form });
+      pdfPath = response.pdf_path;
+    }
     const payload = {
       business,
       title: $("product-title").value.trim(),
@@ -213,6 +238,7 @@ async function saveProduct(event) {
       grade: $("product-grade").value.trim(),
       price: Math.round(price * 100) / 100,
       image_path: path || null,
+      pdf_path: pdfPath || null,
       is_active: $("product-active").checked
     };
     if (!payload.title || !payload.category) throw new Error("A product name and category are required.");
@@ -279,6 +305,7 @@ $("new-recipe-book").addEventListener("click", () => {
   if (business !== "grannys") return;
   resetEditor();
   $("product-category").value = "Recipe Books";
+  refreshPdfControls();
   $("editor-heading").textContent = "Add a recipe book";
   $("product-grade").placeholder = "e.g. Printed book, Digital edition, 48 pages";
   $("product-title").focus();
@@ -286,6 +313,7 @@ $("new-recipe-book").addEventListener("click", () => {
 });
 $("reset-product").addEventListener("click", resetEditor);
 $("search-products").addEventListener("input", drawProducts);
+$("product-category").addEventListener("input", refreshPdfControls);
 $("product-form").addEventListener("submit", saveProduct);
 $("product-image").addEventListener("change", event => {
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
