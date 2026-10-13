@@ -49,6 +49,11 @@
             <label for="product-description">Description</label><textarea id="product-description" maxlength="1000" rows="4" placeholder="Tell customers about this product"></textarea>
             <div class="form-row"><div><label for="product-price">Price (R) *</label><input id="product-price" type="number" required min="0" max="999999.99" step="0.01" placeholder="0.00"></div><div><label for="product-grade">Format / grade / size (optional)</label><input id="product-grade" maxlength="80" placeholder="e.g. Printed, Digital, Grade 4 or 250g"></div></div>
             <label for="product-image">Product photo or book cover (JPG, PNG or WebP; max 3 MB)</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp"><div id="image-preview" class="image-preview" hidden><img id="preview-img" alt="Product preview"><span>Current/selected image</span></div>
+            <div id="recipe-pdf-controls" hidden>
+              <label for="product-pdf">Recipe book PDF (max 3 MB)</label>
+              <input id="product-pdf" type="file" accept="application/pdf,.pdf">
+              <p id="pdf-status" class="admin-field-hint">Upload the private PDF that will be emailed after a verified Yoco payment. It will never be linked publicly.</p>
+            </div>
             <label class="toggle"><input type="checkbox" id="product-active"><span><b>Published / visible to customers</b><small>Leave off for a draft. Clever Cubs checkout remains a test preview until payments are set up.</small></span></label>
             <button id="save-product" class="button primary full" type="submit">Save product</button>
             <p id="form-message" class="message" role="status" aria-live="polite"></p>
