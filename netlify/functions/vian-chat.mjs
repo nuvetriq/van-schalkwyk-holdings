@@ -4,7 +4,16 @@ import { json } from "../lib/auth.mjs";
 import { VIAN_BUSINESS_KNOWLEDGE, getPublicProductKnowledge } from "../lib/vian-knowledge.mjs";
 
 const MAX_TEXT=1500, MAX_HISTORY=8, MAX_REQUEST_BODY=16000;
-const IP_LIMIT=25, GLOBAL_LIMIT=250;
+// Conservative pilot limits protect against excessive API charges.
+function configuredLimit(name, fallback, min=1, max=10000) {
+ const raw=process.env[name];
+ if(!raw)return fallback;
+ const value=Number(raw);
+ return Number.isSafeInteger(value) && value>=min && value<=max ? value : fallback;
+}
+const IP_DAILY_LIMIT=configuredLimit("VIAN_IP_DAILY_LIMIT",20);
+const IP_HOURLY_LIMIT=configuredLimit("VIAN_IP_HOURLY_LIMIT",10);
+const GLOBAL_DAILY_LIMIT=configuredLimit("VIAN_DAILY_REQUEST_LIMIT",100);
 const usageStore=()=>getStore({name:"vsh-vian-daily-limits",consistency:"strong"});
 const clean=value=>String(value||"").trim();
 function instructions(publicProducts) {
@@ -75,9 +84,11 @@ export default async function handler(request) {
  try{
   const day=new Date().toISOString().slice(0,10);
   const client=rateKey(request);
-  // Count even failed upstream requests to limit brute force and API costs.
-  if(!await claimLimit("ip/"+day+"/"+client,IP_LIMIT) ||
-     !await claimLimit("global/"+day,GLOBAL_LIMIT))
+  const hour=new Date().toISOString().slice(0,13);
+  // Count failed upstream calls too. Sitewide cap defends against multiple IPs.
+  if(!await claimLimit("hour/"+hour+"/"+client,IP_HOURLY_LIMIT) ||
+     !await claimLimit("ip/"+day+"/"+client,IP_DAILY_LIMIT) ||
+     !await claimLimit("global/"+day,GLOBAL_DAILY_LIMIT))
     return json({error:"Vian has reached his chat limit for now. Please come back tomorrow or contact the business directly."},429);
 
   const catalog=await getPublicProductKnowledge();
@@ -104,6 +115,11 @@ export default async function handler(request) {
   } finally {clearTimeout(timeout)}
   const data=await response.json().catch(()=>({}));
   if(!response.ok){
+    const code=String(data?.error?.code||"");
+    if(["credit_balance_exhausted","project_spend_limit_exceeded","organization_spend_limit_exceeded"].includes(code)) {
+      // Manual prepaid top-ups are controlled only by the project owner.
+      return json({error:"Vian has reached his available AI chat budget for now. Please come back later."},503);
+    }
     console.error("Vian OpenAI request failed",response.status);
     return json({error:"Vian couldn't answer just now. Please try again shortly."},502);
   }
@@ -115,3 +131,14 @@ export default async function handler(request) {
   return json({error:"Vian is temporarily unavailable. Please try again soon."},503);
  }
 }
+
+// Netlify network-layer limit runs before the function and paid OpenAI call.
+// Sitewide/hourly/daily server counters above supplement this burst protection.
+export const config={
+ path:"/.netlify/functions/vian-chat",
+ rateLimit:{
+   windowLimit:4,
+   windowSize:60,
+   aggregateBy:["ip","domain"]
+ }
+};
