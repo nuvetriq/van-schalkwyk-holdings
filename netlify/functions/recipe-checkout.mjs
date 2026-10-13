@@ -6,7 +6,7 @@ export default async function handler(request) {
   if(request.method !== "POST") return json({error:"Method not allowed."},405);
   const apiKey=process.env.YOCO_SECRET_KEY || "";
   const base=(process.env.VSH_SITE_URL || "").replace(/\/$/,"");
-  if(!/^sk_(test|live)_/.test(apiKey) || !/^https:\/\/[^/]+$/i.test(base) || !process.env.YOCO_WEBHOOK_SECRET || !process.env.RESEND_API_KEY || !process.env.VSH_RECIPE_EMAIL_FROM)
+  if(!/^sk_(test|live)_/.test(apiKey) || !/^https:\/\/[^/]+$/i.test(base) || !process.env.YOCO_WEBHOOK_SECRET || !(process.env.RESEND_API_KEY && process.env.VSH_RECIPE_EMAIL_FROM) && !(process.env.VSH_GMAIL_USER && process.env.VSH_GMAIL_APP_PASSWORD))
     return json({error:"Online payments and email delivery are not configured yet."},503);
   let input;
   try { const raw=await request.text(); if(raw.length>5000) return json({error:"Order too large."},413);input=JSON.parse(raw); }
