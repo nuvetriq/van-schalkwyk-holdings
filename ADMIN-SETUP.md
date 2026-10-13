@@ -4,11 +4,22 @@
 
 A separate link at `/admin.html` for the **one master administrator** to manage two business catalogues from one login.
 
-- **Granny's** — create/edit treats AND **recipe books**. The `+ Recipe book` button automatically selects `Recipe Books` as the product category. Add the cover image, title, description, price, and optional format (printed/digital). Published books display in their own `#recipe-books` collection, separately from treat listings; each book has a WhatsApp enquiry link. No payment or book-file delivery happens on the site.
-- **Clever Cubs Learning** — create/edit digital book product *listings* with covers, grade and prices. Publish/unpublish. The Clever Cubs checkout **remains test-only**, independently of Granny's recipe-book checkout.
+- **Granny's** — create/edit baked treats and digital **recipe books**. The `+ Recipe book` button selects the `Recipe Books` category. Add book title, description, price, cover and the *private PDF*. Book listings appear only under `#recipe-books` when published. Physical treats remain separate.
+- **Clever Cubs Learning** — create/edit **digital PDF books**, with a private PDF file, public cover, grade, category, description and price. Use `+ PDF learning book` inside the same master login. The Clever Cubs cart/checkout **remains test-only**, and no actual paid email fulfillment is enabled.
 - The two legacy admin links redirect to the shared page, preserving old bookmarks.
 - Private admin key and all product modifications are validated server-side in Netlify Functions.
-- Product records and image files are stored in separate **Netlify Blobs** site-wide stores. No Supabase, Coolify or Xneelo required.
+- Product records, cover images and private book PDFs use **Netlify Blobs**. Production uses persistent site-wide stores; non-production previews use isolated deploy stores, so test changes never touch production catalogues. No Supabase, Coolify or Xneelo required.
+
+## Private PDFs and publishing rules
+
+- **Both businesses:** PDF uploads are limited to 3 MB per file. Files must have a PDF signature and an end-of-file marker, and they are stored in private paths prefixed by `grannys/` or `clever-cubs/`.
+- The server verifies the existence and correct business ownership of a private PDF **before saving its product listing**. It rejects a forged path, a wrong-business PDF, or attaching a paid PDF to a normal baked treat.
+- A digital book **cannot be published without a private PDF** or if its price is below R1.00. It can be saved as an unpublished draft without one.
+- Replacing a PDF saves a new private version. Detaching an old PDF is allowed only when the listing is unpublished. Original private files are retained for future paid-order history.
+- The **public API only returns** the book's description, price and whether a PDF exists; it never returns the private file location or original file data. The PDF upload endpoint accepts authenticated POST only, no GET/download route.
+- The admin key is never embedded in public HTML/JS. Private product management is enforced in Netlify Functions.
+- **Digital checkout and automatic PDF emails are NOT live**, even if products are published as catalogue entries in the draft. Clever Cubs remains test-only and Yoco/email activation needs separate work.
+- **Important:** This branch includes unfinished payment features from earlier development. Never merge the whole draft into the live site merely to test the admin dashboard.
 
 ## Complete the activation in Netlify
 
@@ -17,9 +28,13 @@ A separate link at `/admin.html` for the **one master administrator** to manage 
 3. Save and trigger a new deploy after the feature branch is reviewed and merged (or use a branch deploy specifically configured for this app).
 4. Ensure this project deploys the repo via **Netlify Git-based builds** so Functions are bundled and the `@netlify/blobs` package from `package.json` is installed. The `netlify.toml` runs `npm run build`, publishes `dist`, and bundles `netlify/functions` separately. This keeps private sources out of public hosting.
 5. Open `https://YOUR-SITE-DOMAIN/admin.html`, enter the key. The key is kept only in the browser tab's `sessionStorage` until the tab/session ends or you sign out.
-6. Select **Granny's**; create an **unpublished** test treat. Refresh, edit and verify it remains saved. Publish it to see it in the public treat listing. Then choose **+ Recipe book**, give it a test cover/title/price, save it as a draft, and finally publish. Confirm that it appears **only in Recipe Books** and not in the treats grid. Both product types must retain the correct business.
-7. Switch to **Clever Cubs** without signing in again. Create an unpublished book listing, verify isolation, then publish and check its catalogue. **Do not upload paid master PDFs** — only cover images are supported.
-8. Sign out and confirm an invalid key cannot access draft products or publish changes. Verify the public endpoint shows only published products.
+6. On an isolated **Deploy Preview**, sign in and select **Granny's**. Create an unpublished test treat and an unpublished recipe book with a cover and private PDF. Confirm the recipe book appears only in the recipe-books section if published, not among baked treats.
+7. Without signing in again, switch to **Clever Cubs**. Select **+ PDF learning book**, add a cover, grade, price and private PDF, then save as a draft. Check that editing, replacing and detaching the PDF all work. Publishing without a PDF or with a price below R1.00 must be rejected.
+8. Verify a direct GET to `/.netlify/functions/book-pdf` cannot download book files (HTTP 405), an anonymous POST gets HTTP 401, and a public product listing does not expose `pdf_path`.
+9. Verify no Granny's book can be attached to Clever Cubs and vice versa. Confirm public API hides draft products entirely.
+10. Check the admin works on phone/desktop, that product edits persist during that single Deploy Preview, and that the live site remains unchanged. (Deploy Preview data is intentionally ephemeral and may be reset by a new preview deployment.)
+
+11. Sign out and confirm an invalid key cannot access draft products or publish changes. Verify the public endpoint shows only published products.
 
 ## Paths
 
@@ -46,3 +61,7 @@ A separate link at `/admin.html` for the **one master administrator** to manage 
 Recipe books now support a private PDF upload (max 3 MB), one basket for up to 4 books, server-side Yoco checkout, a signed webhook receiver and automatic email of paid PDFs. Select **+ Recipe book** in the Granny's dashboard, upload the cover AND the PDF, then publish.
 
 **Payment is not active until Yoco and email secrets have been configured and tested.** Please see [RECIPE-BOOK-PAYMENTS.md](RECIPE-BOOK-PAYMENTS.md) for activation, testing, privacy and reliability notes.
+
+## Development status — shared admin PDF upgrades
+
+The private upload handler and product validation now support **both** businesses. Mocked backend tests passed for authenticated uploads, PDF verification, publication requirements, business isolation, draft visibility and forbidden public downloads. **No real file upload to Netlify and no real email/payment has been tested in this work yet**. Review the preview before any isolated admin-only production release.
