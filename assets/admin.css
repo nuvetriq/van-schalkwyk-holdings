@@ -166,3 +166,18 @@ body:has(#login-panel:not([hidden])) .wrap {
     padding: 24px 20px;
   }
 }
+
+/* Show the real brand marks instead of letter-based placeholders. */
+.business-avatar.granny,.business-avatar.cubs{
+  width:74px;height:74px;min-width:74px;overflow:hidden;
+  border-radius:20px;padding:4px;background:#fff;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px #efe3dc;
+}
+.business-avatar.granny img,.business-avatar.cubs img {
+  display:block;width:100%;height:100%;object-fit:contain;object-position:center;border-radius:16px;
+}
+@media(max-width:600px){
+  .business-avatar.granny,.business-avatar.cubs{
+    width:58px;height:58px;min-width:58px;border-radius:14px;padding:3px;
+  }
+}
