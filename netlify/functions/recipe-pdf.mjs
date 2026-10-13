@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
-import { getStore } from "@netlify/blobs";
+import { openVSHStore } from "../lib/catalogue-store.mjs";
 import { authStatus, json, BUSINESSES } from "../lib/auth.mjs";
 
 // Shared PRIVATE PDF storage for Granny's recipe books and Clever Cubs books.
 // There is intentionally no GET/download route; paid fulfillment is separate.
 // The existing store name is retained to keep legacy Granny's draft orders compatible.
-const pdfStore = () => getStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
+const pdfStore = () => openVSHStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
 const MAX_SIZE = 3 * 1024 * 1024;
 export default async function handler(request) {
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
