@@ -13,7 +13,7 @@ The interface and supporting SQL have been committed on `feature/unified-product
 3. Under Authentication → Users, create/invite the one master admin user with a strong unique password. For now, turn off public email/password registration (Auth → Providers/Settings as appropriate). Enable MFA when available.
 4. Run the final commented `insert into public.admin_users ...` statement from `setup.sql`, replacing the example email with the email of the account just created. Check that one row was inserted. This role is **assigned server-side**, never by a public registration form.
 5. In `assets/admin-config.js`, add the Supabase project URL and **publishable / anon key**. Do not add a service_role / secret key, database password or login password. RLS is what prevents outsiders from changing products.
-6. Test by opening `admin.html`: sign in, switch between the businesses, create an unpublished product, and then publish it. The catalogue/product display should be connected to Supabase on both storefronts before merging into `main`.
+6. Test by opening `admin.html`: sign in, switch between the businesses, create an unpublished product, and then publish it. Published items are pulled from Supabase on both storefronts: Clever Cubs replaces the demo data when configured, while Granny’s renders a dedicated latest-treats section in addition to its existing showcase. Test both public storefronts before merging into `main`.
 7. After testing, review and merge the feature branch into `main` to deploy with your existing website hosting workflow.
 
 ## Security and limits
