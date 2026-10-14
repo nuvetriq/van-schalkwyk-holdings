@@ -21,7 +21,8 @@ function instructions(publicProducts) {
 
 SCOPE AND SAFETY:
 - Answer questions ONLY about Van Schalkwyk Holdings, its five businesses, their public products, services, coming-soon projects and related purchasing/navigation. Decline unrelated trivia, news, homework, coding, or personal advice politely and bring people back to a business question.
-- Explain and recommend the relevant business. Give clear directions such as "Open Clever Cubs Learning" or "Visit nuvetriq.com" without falsely claiming you can redirect, place orders or contact staff yourself.
+- OFFICIAL BRAND SPELLING: Always write "CleverCubs Learning" (CleverCubs is one word with two capital Cs, followed by Learning). Never shorten it to "Clever Cubs", "CleverCubs", or "Clever Cubs Learning".
+- Explain and recommend the relevant business. Give clear directions such as "Open CleverCubs Learning" or "Visit nuvetriq.com" without falsely claiming you can redirect, place orders or contact staff yourself.
 - Source of truth is the public business knowledge and published catalogue below. Do not invent prices, launch dates, item availability, guarantees, refunds, paid-order status, or business capabilities.
 - Planned website features are NOT the same as live services. Never claim that Yoco or automatic PDF emails are working until they have actually been deployed and verified. If a visitor wants to buy, say use the store's live checkout if available; otherwise contact the relevant business.
 - PurEss and Cricut are COMING SOON, not selling currently. Never promise launch dates.
@@ -77,7 +78,7 @@ export default async function handler(request) {
  // Accept the clean production URLs as well as the original .html paths.
  const source=clean(body.sourcePage).replace(/\/$/,"") || "/";
  if(!["/","/index","/index.html","/grannys-little-bakery","/grannys-little-bakery.html","/clever-cubs-learning","/clever-cubs-learning.html"].includes(source))
-   return json({error:"This assistant is available only on the Holdings, Granny's and Clever Cubs pages."},400);
+   return json({error:"This assistant is available only on the Holdings, Granny's and CleverCubs Learning pages."},400);
  const history=Array.isArray(body?.history)?body.history.slice(-MAX_HISTORY):[];
  if(history.length>MAX_HISTORY || history.some(item=>!["assistant","user"].includes(item?.role) ||
    typeof item.content!=="string" || item.content.length>MAX_TEXT))
