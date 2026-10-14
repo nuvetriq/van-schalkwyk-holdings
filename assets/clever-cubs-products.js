@@ -1,9 +1,9 @@
-/* Clever Cubs product source.
+/* CleverCubs Learning product source.
    Real books can be added here after review, or this can be replaced by the secure backend later. */
 window.CLEVER_CUBS_PRODUCTS = [];
 
 /* Once the backend is configured, the public catalogue reads ONLY published
-   Clever Cubs products. Do not create fictitious products when no books are published. */
+   CleverCubs Learning products. Do not create fictitious products when no books are published. */
 window.CLEVER_CUBS_PRODUCTS_READY = (async function () {
   try {
     const items = await window.VSH_PUBLIC_PRODUCTS.list("clever-cubs");
@@ -33,7 +33,7 @@ window.CLEVER_CUBS_PRODUCTS_READY = (async function () {
       active: item.is_active
     }));
   } catch (error) {
-    console.warn("Clever Cubs live catalogue unavailable:", error);
+    console.warn("CleverCubs Learning live catalogue unavailable:", error);
     window.CLEVER_CUBS_PRODUCTS = [];
   }
 })();
