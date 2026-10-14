@@ -1,5 +1,5 @@
 /* Vian | Van Schalkwyk Holdings Intelligence Network.
-   This client is deliberately loaded ONLY on index, Granny's and Clever Cubs.
+   This client is deliberately loaded ONLY on index, Granny's and CleverCubs Learning.
    The OpenAI key is always server-side in the Netlify Function. */
 (() => {
   "use strict";
@@ -74,12 +74,12 @@
   const greetings={
     home:"Hi there! I'm Vian, the Van Schalkwyk Holdings Intelligence Network. From homemade goodies to learning, digital solutions and exciting things coming soon, I'm here to help! ✨",
     grannys:"Welcome to Granny's! I'm Vian. Looking for sweet treats, recipe books, or a way to get in touch with Granny? 🍰",
-    "clever-cubs":"Welcome to Clever Cubs Learning! I'm Vian. Ask me about CAPS-aligned learning resources, PDF activity books, or our other businesses. 📚"
+    "clever-cubs":"Welcome to CleverCubs Learning! I'm Vian. Ask me about CAPS-aligned learning resources, PDF activity books, or our other businesses. 📚"
   };
   const prompts = {
     home:[["Our businesses","Tell me about all five businesses."],["Nuvetriq","What can Nuvetriq help me with?"],["Coming soon","Which businesses are coming soon?"]],
     grannys:[["Recipe books","How do Granny's digital recipe books work?"],["Treats","What treats does Granny's offer?"],["Contact Granny","How can I contact Granny's?"]],
-    "clever-cubs":[["PDF books","Tell me about Clever Cubs PDF activity books."],["CAPS","What does CAPS-aligned mean for Clever Cubs?"],["Other businesses","What else is part of Van Schalkwyk Holdings?"]]
+    "clever-cubs":[["PDF books","Tell me about CleverCubs Learning PDF activity books."],["CAPS","What does CAPS-aligned mean for CleverCubs Learning?"],["Other businesses","What else is part of Van Schalkwyk Holdings?"]]
   };
 
   function render(role,text,temporary=false){
@@ -155,7 +155,7 @@
   if(isHome && !getStored(sessionStorage,STORAGE_WELCOME)){
     // Show at most once per browser-tab visit, only on the Holdings homepage.
     // A new tab/visit can show the greeting again, while moving between
-    // Holdings, Granny's, Clever Cubs and external Nuvetriq will not.
+    // Holdings, Granny's, CleverCubs Learning and external Nuvetriq will not.
     const showFirstWelcome=()=>{
       if(document.visibilityState!=="visible" || !panel.hidden) return;
       if(getStored(sessionStorage,STORAGE_WELCOME)) return;
