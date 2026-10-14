@@ -20,13 +20,17 @@ const allowedYocoRedirect=url=>{
 
 export default async function handler(request) {
   if(request.method!=="POST")return reply({error:"Method not allowed."},405);
-  if(process.env.CONTEXT!=="deploy-preview" ||
-     process.env.VSH_YOCO_TEST_CHECKOUT!=="true" ||
-     !String(process.env.YOCO_SECRET_KEY||"").startsWith("sk_test_"))
-    return reply({error:"Test checkout is not enabled in this deployment."},503);
-
+  // Check authentication first; only the signed-in master admin receives
+  // actionable configuration diagnostics. Never return any secret values.
   const auth=authStatus(request);
   if(!auth.ok)return reply({error:auth.error},auth.status);
+
+  if(process.env.CONTEXT!=="deploy-preview")
+    return reply({error:"Sandbox checkout is only available in a Deploy Preview, never on the production website."},503);
+  if(process.env.VSH_YOCO_TEST_CHECKOUT!=="true")
+    return reply({error:"In Netlify, set VSH_YOCO_TEST_CHECKOUT to true for Deploy Previews (Functions scope), then rebuild this Deploy Preview."},503);
+  if(!String(process.env.YOCO_SECRET_KEY||"").startsWith("sk_test_"))
+    return reply({error:"The Yoco TEST secret key is not available to Netlify Functions in Deploy Previews. Check the Deploy Previews value of YOCO_SECRET_KEY; it must begin with sk_test_. Never share the key."},503);
   let origin;
   try{
     origin=new URL(request.url).origin;
