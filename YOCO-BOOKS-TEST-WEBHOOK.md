@@ -9,6 +9,10 @@
 - It does not mark any order paid, create checkout sessions, issue book download tokens, send mail, or enable live checkout.
 - Simulated tests of signature acceptance, altered body, wrong signature, expired timestamp, duplicate events, live-mode rejection and disabled-by-default operation passed **10/10**. Real Yoco end-to-end delivery has not been tested.
 
+## Deploy Preview environment configuration
+
+The store owner has confirmed that `VSH_YOCO_TEST_CHECKOUT` has been added in Netlify. A **fresh Deploy Preview build** is required to apply the variable. Confirm the saved variable is `true` for **Deploy Previews** with **Functions** scope, and confirm `YOCO_SECRET_KEY` resolves to a `sk_test_` key for Deploy Previews. Do not use `VSH_ENABLE_PAYMENTS` during sandbox tests.
+
 ## Shared two-business sandbox checkout — now in development
 
 - The private test UI is `/book-test-checkout.html` linked from the **master admin dashboard** in the development branch only. It reads published PDFs from the selected business's preview catalogue. **Books in the production admin do not automatically appear in Netlify Deploy Preview storage.**
