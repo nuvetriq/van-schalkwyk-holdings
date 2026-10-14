@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Private Yoco Sandbox | Van Schalkwyk Holdings</title>
+<link rel="stylesheet" href="assets/admin.css">
+<script src="assets/book-test-checkout.js" defer></script>
+</head><body>
+<header class="topbar"><a class="brand" href="admin.html"><img src="assets/vs-transparent.svg" width="40" height="40" alt=""><span>VAN SCHALKWYK HOLDINGS</span></a><a class="top-link" href="admin.html">← Admin Portal</a></header>
+<main class="wrap" style="max-width:800px;padding-block:45px">
+<section class="panel" style="padding:30px">
+<p class="eyebrow">PRIVATE SANDBOX · NOT FOR CUSTOMERS</p>
+<h1 style="font:normal 40px Georgia,serif;margin-top:8px">Test a Yoco checkout</h1>
+<p>This page exists only on the development preview. It requires your signed-in master admin key, a Yoco test key and a separate enable switch. No paid PDF links or emails will be issued.</p>
+<form id="test-cart">
+<label for="test-business">Business</label>
+<select id="test-business" required><option value="grannys">Granny's</option><option value="clever-cubs">CleverCubs Learning</option></select>
+<p id="test-books-label" class="admin-field-hint">Published digital books in this preview:</p>
+<div id="test-books" class="product-list" aria-live="polite">Loading preview catalogue…</div>
+<label for="test-customer">Test customer name</label>
+<input id="test-customer" maxlength="120" required autocomplete="name" placeholder="Test Customer">
+<label for="test-email">Test email address</label>
+<input id="test-email" type="email" maxlength="254" required autocomplete="email" placeholder="you@example.com">
+<p id="test-total" class="admin-field-hint">Selected total: R0.00</p>
+<button class="button primary full" id="test-start" type="submit">Open Yoco TEST checkout</button>
+<p id="test-status" class="message" role="status" aria-live="polite"></p>
+</form>
+</section>
+</main>
+</body></html>
