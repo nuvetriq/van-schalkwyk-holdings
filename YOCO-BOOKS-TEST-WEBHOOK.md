@@ -46,3 +46,8 @@ Official references:
 ## Verification of checkout flag values (14 October 2026)
 
 The owner has configured `VSH_YOCO_TEST_CHECKOUT` separately from `YOCO_SECRET_KEY`: `true` for Deploy Previews and `false` for Production, while `YOCO_SECRET_KEY` remains the Yoco `sk_test_...` API key. This documentation-only commit requests a fresh Deploy Preview so Netlify can inject updated Functions-scope settings. Do not enable `VSH_ENABLE_PAYMENTS`; the test checkout is admin-only and produces no paid book delivery.
+
+
+## Deploy Preview rebuild after corrected Yoco flag
+
+On 14 October 2026, the owner found that `VSH_YOCO_TEST_CHECKOUT` had been mistakenly configured as **false** for Deploy Previews and **true** for Branch deploys. The owner has now corrected the Netlify settings: **Deploy Previews = true; Branch deploys = false; Production = false**. Trigger **one** new Deploy Preview with this documentation-only commit to load the corrected Functions environment. Do not activate `VSH_ENABLE_PAYMENTS`, do not alter `YOCO_SECRET_KEY`, and do not deploy unfinished checkout functionality to production.
