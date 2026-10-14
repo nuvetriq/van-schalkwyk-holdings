@@ -28,7 +28,7 @@ function validate(input) {
     (business === "grannys" && /^recipe books?$/i.test(category));
   // Book files must be kept in the matching business folder, not attached to treats
   // or another business's listing. They are NEVER included in public responses.
-  if (pdf && (!isBook || !new RegExp("^"+business+"/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.pdf$","i").test(pdf))) {
+  if (pdf && (!isBook || !new RegExp("^"+business+"/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.(?:pdf|manifest\\.json)$","i").test(pdf))) {
     throw Error("Invalid private PDF path for this business.");
   }
   if (isBook && input.is_active === true && !pdf)
@@ -95,6 +95,17 @@ export default async function handler(request) {
       const pdfStore = openVSHStore({ name: "vsh-private-recipe-pdfs", consistency: "strong" });
       const metadata = await pdfStore.getMetadata(payload.pdf_path);
       if (!metadata) return json({ error: "The private PDF cannot be found. Please upload it again." }, 400);
+      // Chunked PDFs are *manifests*, not inline PDF files. Confirm their
+      // recorded business and complete status before accepting a reference.
+      if (payload.pdf_path.endsWith(".manifest.json")) {
+        const manifest=await pdfStore.get(payload.pdf_path,{type:"json"});
+        if(manifest?.kind!=="chunked-pdf" || manifest.version!==1 ||
+          manifest.business!==payload.business || manifest.part_count<1 ||
+          !Number.isSafeInteger(manifest.size_bytes) ||
+          manifest.part_bytes!==3*1024*1024) {
+          return json({error:"Private PDF upload isn't complete. Please upload it again."},400);
+        }
+      }
     }
     // Image paths must point to an existing upload in the appropriate business.
     if (payload.image_path) {
