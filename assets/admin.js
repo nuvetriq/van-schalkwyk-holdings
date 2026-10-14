@@ -26,6 +26,23 @@ let products = [];
 let editingImagePath = "";
 let editingPdfPath = "";
 let previewObjectUrl = null;
+let uploadResultToCommit=null;
+function onPDFProgress(state) {
+  const panel=$("pdf-progress-panel");
+  panel.hidden=false;
+  $("pdf-progress").value=Math.round(state.fraction*100);
+  $("pdf-progress-percent").textContent=Math.round(state.fraction*100)+"%";
+  $("pdf-progress-title").textContent=state.phase==="complete"?"PDF uploaded":
+    state.phase==="finalizing"?"Verifying book":state.phase==="checking"?"Preparing PDF":"Uploading book";
+  $("pdf-progress-detail").textContent=state.detail||"";
+  $("pause-pdf-upload").hidden=!["checking","uploading","finalizing"].includes(state.phase);
+}
+function resetPDFProgress() {
+  $("pdf-progress-panel").hidden=true;
+  $("pdf-progress").value=0;
+  $("pdf-progress-detail").textContent="";
+  $("pause-pdf-upload").hidden=true;
+}
 if (!BUSINESSES[business]) business = "grannys";
 
 function show(id) {
@@ -57,8 +74,8 @@ function refreshPdfControls() {
   const book = isDigitalBook();
   $("book-pdf-controls").hidden = !book;
   $("pdf-label").textContent = business === "clever-cubs"
-    ? "CleverCubs Learning learning book PDF (private, max 3 MB)"
-    : "Granny's recipe book PDF (private, max 3 MB)";
+    ? "CleverCubs Learning book PDF (private, up to 2 GB)"
+    : "Granny's recipe book PDF (private, up to 2 GB)";
   $("remove-pdf-wrapper").hidden = !book || !editingPdfPath;
   if (book && editingPdfPath) $("pdf-status").textContent =
     "Private PDF attached to this listing. Choose another PDF to replace it.";
@@ -67,6 +84,8 @@ function refreshPdfControls() {
 }
 function resetEditor() {
   $("product-form").reset();
+  resetPDFProgress();
+  uploadResultToCommit=null;
   $("product-id").value = "";
   editingImagePath = "";
   editingPdfPath = "";
@@ -274,8 +293,8 @@ async function saveProduct(event) {
     return;
   }
   if (pdfFile && (!["application/pdf", ""].includes(pdfFile.type) ||
-      !/\.pdf$/i.test(pdfFile.name) || pdfFile.size < 8 || pdfFile.size > 3 * 1024 * 1024)) {
-    message("form-message", "Choose a PDF file no larger than 3 MB.", "error");
+      !/\.pdf$/i.test(pdfFile.name) || pdfFile.size < 8 || pdfFile.size > 2 * 1024 * 1024 * 1024)) {
+    message("form-message", "Choose a PDF book no larger than 2 GB.", "error");
     return;
   }
   if (isBook && $("product-active").checked && !pdfFile && (!editingPdfPath || detach)) {
@@ -300,12 +319,10 @@ async function saveProduct(event) {
     }
     let pdfPath = isBook && !detach ? editingPdfPath : "";
     if (pdfFile) {
-      const form = new FormData();
-      form.set("business", selectedBusiness);
-      form.set("file", pdfFile);
-      const response = await requestJSON("/.netlify/functions/book-pdf",
-        { method: "POST", body: form });
-      pdfPath = response.pdf_path;
+      const uploaded=await window.VSH_BOOK_UPLOADER.upload(pdfFile,selectedBusiness,onPDFProgress);
+      pdfPath=uploaded.pdf_path;
+      uploadResultToCommit=uploaded;
+      $("pdf-status").textContent="Private PDF uploaded. Saving its product details…";
     }
     const payload = {
       business: selectedBusiness,
@@ -325,9 +342,10 @@ async function saveProduct(event) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    window.VSH_BOOK_UPLOADER.clearSaved(uploadResultToCommit);
     resetEditor();
     await loadProducts();
-    message("list-message", "Product saved successfully.", "success");
+    message("list-message", "Product and private PDF saved successfully.", "success");
   } catch (error) {
     message("form-message", error.message || "Could not save the product.", "error");
   } finally {
@@ -419,9 +437,17 @@ $("reset-product").addEventListener("click", resetEditor);
 $("search-products").addEventListener("input", drawProducts);
 $("product-category").addEventListener("input", refreshPdfControls);
 $("product-pdf").addEventListener("change", event => {
+  resetPDFProgress();
+  uploadResultToCommit=null;
   if (event.target.files[0]) $("pdf-status").textContent =
-    "Selected file: " + event.target.files[0].name + " (private; not published for download).";
+    "Selected file: " + event.target.files[0].name + " ("+
+    (event.target.files[0].size/1024/1024).toFixed(1)+" MB). Click Save product to upload securely; you can resume after an interruption.";
   else refreshPdfControls();
+});
+$("pause-pdf-upload").addEventListener("click",()=>{
+  window.VSH_BOOK_UPLOADER.pause();
+  $("pause-pdf-upload").hidden=true;
+  $("pdf-progress-detail").textContent="Pausing. Saved parts can be resumed by pressing Save product.";
 });
 $("remove-pdf").addEventListener("change", event => {
   if (event.target.checked) {
