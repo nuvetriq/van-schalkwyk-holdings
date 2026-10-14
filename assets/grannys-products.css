@@ -67,3 +67,37 @@ body.gr-book-basket-open .vian-widget{display:none!important}
 .gr-basket-total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;border-top:1px solid #e9d7da;padding-top:18px}
 .gr-basket-note{font-size:13px;line-height:1.6;color:#86596b;background:#fff2ee;border:1px solid #f1d8d4;padding:15px;border-radius:12px;margin-top:18px}
 @media(max-width:600px){.gr-basket-button{right:12px;bottom:12px}.gr-basket-panel{padding:20px}}
+
+
+/* Recipe Books is a navigational link to its dedicated collection, not an
+   interactive treat tab. Preserve the four existing category tab behaviors. */
+.category-grid .recipe-books-category{
+  grid-column:1 / -1;
+  width:100%;
+  min-height:120px;
+  color:#5c3440 !important;
+  text-decoration:none !important;
+  background:linear-gradient(105deg,#fff0e7,#fff9f6) !important;
+  border:1px solid #e9c4b5 !important;
+  box-shadow:none !important;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease;
+}
+.category-grid .recipe-books-category .category-icon{
+  background:#f6dadd;color:#a54869;
+}
+.category-grid .recipe-books-category:hover{
+  transform:translateY(-3px);
+  border-color:#ba7b84 !important;
+}
+.category-grid .recipe-books-category:focus-visible{
+  outline:3px solid #ba7086;
+  outline-offset:3px;
+}
+#recipe-books{scroll-margin-top:95px}
+@media(max-width:700px){
+  .category-grid .recipe-books-category{grid-column:1 / -1;min-height:110px}
+}
+@media(prefers-reduced-motion:reduce){
+  .category-grid .recipe-books-category{transition:none}
+}
