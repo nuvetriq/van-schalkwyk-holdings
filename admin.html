@@ -55,11 +55,17 @@
             <div class="form-row"><div><label for="product-price">Price (R) *</label><input id="product-price" type="number" required min="0" max="999999.99" step="0.01" placeholder="0.00"></div><div><label for="product-grade">Format / grade / size (optional)</label><input id="product-grade" maxlength="80" placeholder="e.g. Printed, Digital, Grade 4 or 250g"></div></div>
             <label for="product-image">Product photo or book cover (JPG, PNG or WebP; up to 15 MB — automatically optimised)</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp"><div id="image-preview" class="image-preview" hidden><img id="preview-img" alt="Product preview"><span>Current/selected image</span></div>
             <div id="book-pdf-controls" hidden>
-              <label id="pdf-label" for="product-pdf">Private digital book PDF (max 3 MB)</label>
+              <label id="pdf-label" for="product-pdf">Private digital book PDF (up to 2 GB; resumable upload)</label>
               <input id="product-pdf" type="file" accept="application/pdf,.pdf">
+              <div class="pdf-upload-progress" id="pdf-progress-panel" hidden>
+                <div class="pdf-progress-top"><strong id="pdf-progress-title">Preparing upload</strong><span id="pdf-progress-percent">0%</span></div>
+                <progress id="pdf-progress" max="100" value="0" aria-label="PDF upload progress"></progress>
+                <p id="pdf-progress-detail" class="admin-field-hint"></p>
+                <button type="button" class="button subtle" id="pause-pdf-upload" hidden>Pause upload</button>
+              </div>
               <p id="pdf-status" class="admin-field-hint">The original PDF stays private. Only customers with a verified purchase will eventually receive it.</p>
               <label class="admin-remove-pdf" id="remove-pdf-wrapper" hidden><input type="checkbox" id="remove-pdf"><span>Detach the current PDF from this listing (you must unpublish the book first)</span></label>
-              <p class="admin-field-hint">PDF files are never publicly downloadable from this admin system. Digital checkout and email delivery are not live yet.</p>
+              <p class="admin-field-hint">PDF files are never publicly downloadable from this admin system. Large PDFs upload in small private chunks and can resume if interrupted. Checkout and customer downloads are not live yet.</p>
             </div>
             <label class="toggle"><input type="checkbox" id="product-active"><span><b>Published / visible to customers</b><small>Leave off for a draft. Published digital books require a private PDF. Checkout and paid delivery are not live yet.</small></span></label>
             <button id="save-product" class="button primary full" type="submit">Save product</button>
@@ -67,9 +73,10 @@
           </form>
         </section>
       </div>
-      <p class="dashboard-footnote">Admin-only development build. Publishing controls catalogue visibility; payments, customer orders and automated PDF emails are not active on the live website.</p>
+      <p class="dashboard-footnote">Private product and PDF storage is available. Publishing a catalogue entry does not activate payments, customer downloads, or automated emails.</p>
     </section>
   </main>
+  <script src="assets/book-uploader.js" defer></script>
   <script src="assets/admin.js" defer></script>
 </body>
 </html>
