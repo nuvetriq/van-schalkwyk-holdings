@@ -41,3 +41,8 @@ Official references:
 - https://developer.yoco.com/api-reference/checkout-api/webhooks/register-webhook
 - https://developer.yoco.com/guides/online-payments/webhooks/verifying-the-events
 - https://developer.yoco.com/api-reference/checkout-api/webhook-events/payment-notification
+
+
+## Verification of checkout flag values (14 October 2026)
+
+The owner has configured `VSH_YOCO_TEST_CHECKOUT` separately from `YOCO_SECRET_KEY`: `true` for Deploy Previews and `false` for Production, while `YOCO_SECRET_KEY` remains the Yoco `sk_test_...` API key. This documentation-only commit requests a fresh Deploy Preview so Netlify can inject updated Functions-scope settings. Do not enable `VSH_ENABLE_PAYMENTS`; the test checkout is admin-only and produces no paid book delivery.
