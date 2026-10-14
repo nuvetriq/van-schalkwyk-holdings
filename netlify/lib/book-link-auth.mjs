@@ -42,7 +42,7 @@ async function getPaidOrderItem(business,orderId,bookId){
 function assertToken(value){
   if(typeof value!=="string" || value.length>2048 || value.length<40)throw failed();
   const [header,sig,...rest]=value.split(".");
-  if(rest.length || !header || !sig)return failedToken();
+  if(rest.length || !header || !sig)throw failed();
   let expected;
   const signature=crypto.createHmac("sha256",secret()).update(header).digest();
   try{expected=Buffer.from(sig,"base64url")}catch{throw failed()}
@@ -58,7 +58,6 @@ function assertToken(value){
     data.exp-data.iat>MAX_AGE_SECONDS)throw failed();
   return data;
 }
-function failedToken(){throw failed()}
 export async function issuePaidBookLink({business,orderId,bookId,origin,ttlSeconds=defaultAge}){
   if(process.env.VSH_ENABLE_PAYMENTS!=="true"||process.env.CONTEXT!=="production")
     throw new Error("Verified paid-book fulfillment is not enabled.");
@@ -97,10 +96,12 @@ export async function authorizePaidBookToken(token){
     file={kind:"chunked",parts:manifest.part_count,
       size:manifest.size_bytes,id:manifest.id,part_bytes:partBytes};
   }else{
-    const meta=await fileStore.getMetadata(path);
-    if(!meta)throw failed();
-    // Legacy small uploads are still served only via this authenticated route.
-    file={kind:"legacy",parts:1,size:Number(meta.size)||0,id:null,part_bytes:0};
+    // Legacy PDFs are small (at most 3 MiB) and have no chunk manifest.
+    // Read once to determine the actual byte length: Blob metadata does not
+    // consistently expose a standard 'size' property across SDK versions.
+    const pdf=await fileStore.get(path,{type:"arrayBuffer"});
+    if(!pdf || pdf.byteLength<8 || pdf.byteLength>partBytes)throw failed();
+    file={kind:"legacy",parts:1,size:pdf.byteLength,id:null,part_bytes:pdf.byteLength};
   }
   const original=String(item.title||"").replace(/[^a-z0-9 _.-]/gi," ").trim().slice(0,90);
   const filename=(original || "Digital-Book")+".pdf";
