@@ -210,6 +210,48 @@ function editProduct(id) {
   $("product-title").focus({ preventScroll: true });
   if (window.innerWidth < 850) $("product-form").scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+// Upload covers as compressed website assets, not as 15 MB originals.
+// Netlify Functions have a strict buffered-request limit (~4.5 MB binary).
+const MAX_COVER_SOURCE=15*1024*1024;
+const MAX_COVER_UPLOAD=2.75*1024*1024;
+async function prepareCoverForUpload(file) {
+  if (!file) return null;
+  if (!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>MAX_COVER_SOURCE || file.size<=0) {
+    throw new Error("Choose a JPG, PNG or WebP cover image up to 15 MB.");
+  }
+  if (file.size<=MAX_COVER_UPLOAD) return file;
+  if (typeof createImageBitmap!=="function") {
+    throw new Error("Your browser cannot optimise this large cover. Please use an updated Chrome or Edge browser.");
+  }
+  let bitmap;
+  try {
+    bitmap=await createImageBitmap(file);
+    if (!bitmap.width || !bitmap.height) throw new Error("The picture could not be opened.");
+    const toBlob=(canvas,quality)=>new Promise(resolve=>canvas.toBlob(resolve,"image/webp",quality));
+    let maximum=2200;
+    for(let attempt=0;attempt<7;attempt++){
+      const ratio=Math.min(1,maximum/Math.max(bitmap.width,bitmap.height));
+      const canvas=document.createElement("canvas");
+      canvas.width=Math.max(1,Math.round(bitmap.width*ratio));
+      canvas.height=Math.max(1,Math.round(bitmap.height*ratio));
+      const context=canvas.getContext("2d",{alpha:true});
+      if(!context) throw new Error("Cover optimisation is not supported by this browser.");
+      context.imageSmoothingEnabled=true;
+      context.imageSmoothingQuality="high";
+      context.drawImage(bitmap,0,0,canvas.width,canvas.height);
+      for(const quality of [.88,.75,.60,.45]){
+        const out=await toBlob(canvas,quality);
+        if(out && out.type==="image/webp" && out.size>0 && out.size<=MAX_COVER_UPLOAD){
+          return new File([out],(file.name.replace(/\.[^.]+$/,"")||"cover")+".webp",{type:"image/webp"});
+        }
+      }
+      maximum=Math.floor(maximum*.78);
+    }
+    throw new Error("This cover couldn't be optimised enough for upload. Try a smaller-resolution picture.");
+  } finally {bitmap?.close?.()}
+}
+
 async function saveProduct(event) {
   event.preventDefault();
   message("form-message", "");
@@ -219,8 +261,8 @@ async function saveProduct(event) {
     return;
   }
   const file = $("product-image").files[0];
-  if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 3 * 1024 * 1024)) {
-    message("form-message", "Choose a JPG, PNG or WebP image no larger than 3 MB.", "error");
+  if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size <= 0 || file.size > MAX_COVER_SOURCE)) {
+    message("form-message", "Choose a JPG, PNG or WebP cover image up to 15 MB.", "error");
     return;
   }
   const selectedBusiness = business;
@@ -248,9 +290,11 @@ async function saveProduct(event) {
   try {
     let path = editingImagePath;
     if (file) {
+      if (file.size > MAX_COVER_UPLOAD) message("form-message", "Optimising your cover image for the website…");
+      const preparedCover = await prepareCoverForUpload(file);
       const data = new FormData();
       data.set("business", selectedBusiness);
-      data.set("file", file);
+      data.set("file", preparedCover);
       const uploaded = await requestJSON(imagesEndpoint, { method: "POST", body: data });
       path = uploaded.image_path;
     }
