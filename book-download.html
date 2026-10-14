@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>Your digital book | Van Schalkwyk Holdings</title>
+  <link rel="stylesheet" href="assets/book-download.css">
+  <script src="assets/book-download.js" defer></script>
+</head>
+<body>
+  <header class="book-header">
+    <a href="/" class="logo" aria-label="Van Schalkwyk Holdings homepage">
+      <img src="assets/vs-transparent.svg" alt="" width="42" height="42">
+      <span>VAN SCHALKWYK HOLDINGS</span>
+    </a>
+  </header>
+  <main class="book-main">
+    <div class="gold-mark"><img src="assets/vs-transparent.svg" alt="" width="80" height="80"></div>
+    <p class="eyebrow">YOUR PRIVATE DIGITAL LIBRARY</p>
+    <h1>Download your book</h1>
+    <p class="intro">Your purchase is protected. Save the PDF to your device using your private, expiring link.</p>
+    <section class="book-panel" aria-live="polite">
+      <p id="download-status" role="status">Checking your private link…</p>
+      <div id="book-details" hidden>
+        <p class="label">YOUR BOOK</p>
+        <h2 id="book-title"></h2>
+        <p id="book-size"></p>
+        <p id="book-expiry"></p>
+        <button id="save-book" type="button">Save PDF to my device</button>
+        <div id="book-progress-area" hidden>
+          <div class="progress-top"><strong id="progress-label">Preparing…</strong><span id="progress-percent">0%</span></div>
+          <progress id="book-progress" max="100" value="0"></progress>
+        </div>
+      </div>
+    </section>
+    <p class="help">If your link expired, reply to your purchase confirmation email to request help.</p>
+    <p class="tip">For books larger than 75 MB, please use the latest desktop Chrome or Edge browser. Support for large mobile downloads is being prepared.</p>
+  </main>
+</body>
+</html>
