@@ -29,14 +29,14 @@
 .gr-recipe-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:28px}
 .gr-recipe-card{background:#fff;overflow:hidden;border-radius:19px;border:1px solid #f1e0d9;box-shadow:0 12px 28px #653b3212;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
 .gr-recipe-card:hover{transform:translateY(-4px);box-shadow:0 20px 36px #653b3222}
-.gr-recipe-card-image{background:linear-gradient(145deg,#ffece7,#f8d6db);height:275px;display:grid;place-items:center;padding:17px}
-.gr-recipe-card-image img{display:block;max-height:100%;max-width:100%;object-fit:contain;border-radius:3px;filter:drop-shadow(8px 10px 9px #652d3428)}
+.gr-recipe-card-image{background:linear-gradient(145deg,#ffece7,#f8d6db);height:275px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;overflow:hidden;padding:17px}
+.gr-recipe-card-image img{display:block;width:100%;height:100%;min-width:0;min-height:0;max-width:100%;max-height:100%;object-fit:contain;object-position:center;border-radius:3px;filter:drop-shadow(8px 10px 9px #652d3428)}
 .gr-recipe-cover-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;height:212px;width:162px;border-left:7px solid #b76c80;background:linear-gradient(90deg,#f9e1df,#fff9e8);box-shadow:9px 12px 15px #652d3433;color:#724251;padding:15px;font-family:Georgia,serif;font-size:20px;overflow-wrap:anywhere}
 .gr-recipe-cover-fallback:before{content:"✿";font-family:serif;font-size:34px;color:#c97c8f}
 .gr-recipe-card-body{display:flex;flex-direction:column;flex:1;padding:23px 22px 22px}
 .gr-recipe-card-meta{color:#b97083!important;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px!important}
 .gr-recipe-card h4{font-family:Georgia,serif;color:#633440;font-size:24px;line-height:1.22;margin:0 0 10px;overflow-wrap:anywhere}
-.gr-recipe-card-description{font-size:14px;line-height:1.65;color:#84676b;margin:0 0 21px;flex:1;white-space:pre-line}
+.gr-recipe-card-description{display:block;font-size:14px;line-height:1.65;color:#84676b;margin:0 0 21px;flex:1;white-space:pre-line;overflow:visible;overflow-wrap:anywhere;max-height:none;-webkit-line-clamp:unset}
 .gr-recipe-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid #f1e5e1;padding-top:18px}
 .gr-recipe-card-price{font-size:19px;color:#613541}
 .gr-recipe-card-action{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:850;color:#a34d68;text-decoration:none;border-bottom:1px solid #d4a6b1;padding-bottom:3px}
