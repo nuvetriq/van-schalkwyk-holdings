@@ -9,6 +9,18 @@
 - It does not mark any order paid, create checkout sessions, issue book download tokens, send mail, or enable live checkout.
 - Simulated tests of signature acceptance, altered body, wrong signature, expired timestamp, duplicate events, live-mode rejection and disabled-by-default operation passed **10/10**. Real Yoco end-to-end delivery has not been tested.
 
+## Shared two-business sandbox checkout — now in development
+
+- The private test UI is `/book-test-checkout.html` linked from the **master admin dashboard** in the development branch only. It reads published PDFs from the selected business's preview catalogue. **Books in the production admin do not automatically appear in Netlify Deploy Preview storage.**
+- The guarded endpoint `/.netlify/functions/book-checkout-test` accepts **one business per order** and at most eight distinct book IDs, name and email. It calculates every price from private Netlify product records; validates the matching original private PDF or sealed large-PDF manifest; and stores immutable item IDs, prices and PDF paths in `vsh-book-orders` (preview-scoped) before creating a Yoco test checkout.
+- The Yoco request uses ZAR cents, a UUID idempotency key and order reference, and safe HTTPS redirect host validation. The Yoco response must confirm **test** processing mode and exactly match the server amount/currency before the checkout ID is bound to the order.
+- Every test order remains `checkout_pending` or `awaiting_payment`, with `paymentVerified:false`. **Neither checkout creation nor the redirect marks an order paid**. The return page `/book-order-test.html` explicitly says it is not proof of payment.
+- Start requests require the secret admin key in the request header. The feature is OFF unless **all** of the following are true: Netlify `CONTEXT=deploy-preview`, `VSH_YOCO_TEST_CHECKOUT=true`, and a `YOCO_SECRET_KEY` beginning with `sk_test_`. The request origin must match Netlify's `DEPLOY_PRIME_URL`. The live production website is refused regardless of settings.
+- **18/18 simulated backend checks passed**, including cross-business isolation, unpublished books, fractional prices, duplicate book IDs, key validation, cross-site requests, production refusal and test-key-only enforcement.
+- The separate signed webhook receiver is still **verify-only**, not connected to these pending orders or email delivery.
+- Setup after preview build: add `VSH_YOCO_TEST_CHECKOUT=true` for **Deploy Previews only** to the Netlify environment (Functions scope), trigger a fresh Deploy Preview; use the preview Admin Portal and upload a **small test book** in its isolated storage. Open the private sandbox link on the admin dashboard and test one book from each business. If Yoco refuses the unverified Netlify Preview callback domain, stop and diagnose; do **not** bypass the verification or enable production payments.
+- Do **not** configure `VSH_ENABLE_PAYMENTS=true`; that's a separate activation for future signed-webhook + email link fulfillment.
+
 ## When the full shared checkout is ready
 
 1. Release a standalone verified **test** webhook endpoint on Netlify with all payment/fulfilment flags still off.
