@@ -1,4 +1,4 @@
-/* Clever Cubs product source.
+/* CleverCubs Learning product source.
    Real books can be added here after review, or this can be replaced by the secure backend later. */
 window.CLEVER_CUBS_PRODUCTS = [
   {
@@ -7,7 +7,7 @@ window.CLEVER_CUBS_PRODUCTS = [
     category: "primary",
     categoryLabel: "Primary School",
     grade: "Preview product",
-    description: "A sample product used to test the Clever Cubs catalogue, cart and checkout journey while the real books are being reviewed.",
+    description: "A sample product used to test the CleverCubs Learning catalogue, cart and checkout journey while the real books are being reviewed.",
     price: 99,
     currency: "ZAR",
     badge: "TEST PRODUCT",
@@ -17,7 +17,7 @@ window.CLEVER_CUBS_PRODUCTS = [
 ];
 
 /* Once the backend is configured, the public catalogue reads ONLY published
-   Clever Cubs products. Keep the old demo product in setup mode. */
+   CleverCubs Learning products. Keep the old demo product in setup mode. */
 window.CLEVER_CUBS_PRODUCTS_READY = (async function () {
   try {
     const items = await window.VSH_PUBLIC_PRODUCTS.list("clever-cubs");
@@ -47,7 +47,7 @@ window.CLEVER_CUBS_PRODUCTS_READY = (async function () {
       active: item.is_active
     }));
   } catch (error) {
-    console.warn("Clever Cubs live catalogue unavailable:", error);
+    console.warn("CleverCubs Learning live catalogue unavailable:", error);
     window.CLEVER_CUBS_PRODUCTS = [];
   }
 })();
