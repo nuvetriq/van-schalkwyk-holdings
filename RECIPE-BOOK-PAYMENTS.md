@@ -5,6 +5,29 @@
 **Payment safety switch (October 2026):** Yoco checkout creation, Yoco webhook processing and scheduled PDF email sending are now **OFF by default**, even on Deploy Previews. Enabling future paid fulfillment requires the Netlify Functions environment variable `VSH_ENABLE_PAYMENTS=true` **and** a production-context deployment, in addition to all verified Yoco/email secrets and transaction safeguards. Do not enable it while this work is unfinished. Clever Cubs PDF files are supported by the shared admin editor, but a real Clever Cubs Yoco checkout and verified email fulfillment must still be built and tested.
 
 
+## Planned two-brand large-book delivery (NOT LIVE)
+
+Both businesses must use the same **verified Yoco payment → purchased-book authorisation → private expiring links** principle. Original PDFs can exceed 500 MB, so do **not** attempt to attach them to emails. The separate, secure download implementation, large-file uploading and transactional order tracking still need to be built and tested before any payments are enabled.
+
+Business-specific email senders:
+
+| Store | Visible sender address | Future Netlify secret variable names |
+| --- | --- | --- |
+| Granny's | grannyspopsandtreats@gmail.com | `VSH_GRANNYS_GMAIL_USER`, `VSH_GRANNYS_GMAIL_APP_PASSWORD` |
+| CleverCubs Learning | learningclevercubs@gmail.com | `VSH_CLEVERCUBS_GMAIL_USER`, `VSH_CLEVERCUBS_GMAIL_APP_PASSWORD` |
+
+The two accounts must independently support an appropriate secure mail-sending method, e.g. Gmail SMTP with Google app passwords where available. Use two separate Netlify secret values; don't share normal account passwords or commit them to GitHub. A verified custom-domain email service is another option, but cannot impersonate an unverified `@gmail.com` address.
+
+Future implementation requirements:
+1. The order must include an immutable business identifier, purchased product IDs, quantities and server-side prices, with verified checkout reference, amount and currency.
+2. A signed Yoco webhook—not the thank-you page—must mark the order paid, using a transactional idempotent order/fulfilment store.
+3. Generate a short-lived private link per purchased PDF only; do not expose permanent paths or let customers access unpaid books. Verify the purchaser/order, limits, expiry and revocation before downloads.
+4. Large 500 MB+ files require a proven private large-object storage/download design with resumable uploads and secure streaming or signed-object URLs; current buffered Netlify Functions cannot transfer them as a single request.
+5. Send **one order-specific email from that store's sender** containing only its purchased-book links; log delivery status, retry failures and provide a manual resend process.
+6. Validate both sending accounts, both businesses, cancelled/failed payments, duplicate signed events, expired links, unrelated book IDs, huge PDFs, inbox placement and customer support before launch.
+
+A private future sender-name mapping is in `netlify/lib/book-email-brands.mjs`; it is not connected to any live purchase flow. The old Granny's attachment-based proof of concept is not suitable for large books and must be replaced. The `VSH_ENABLE_PAYMENTS` switch must remain unset/off while these features are unfinished.
+
 ## Customer flow
 
 1. Add a recipe book in the master admin, with a public cover and a private PDF (max 3 MB). Publish only after uploading the PDF.
