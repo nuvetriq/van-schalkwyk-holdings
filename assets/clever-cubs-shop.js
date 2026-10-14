@@ -1,4 +1,5 @@
-(()=>{"use strict";
+(async()=>{"use strict";
+await (window.CLEVER_CUBS_PRODUCTS_READY || Promise.resolve());
 const products=(window.CLEVER_CUBS_PRODUCTS||[]).filter(p=>p.active!==false);
 const storageKey="ccl-cart-v1";
 let cart=[];
@@ -6,13 +7,13 @@ try{cart=JSON.parse(localStorage.getItem(storageKey)||"[]")}catch{cart=[]}
 cart=cart.filter(id=>products.some(p=>p.id===id));
 const rand=()=>Math.random().toString(36).slice(2,7).toUpperCase();
 const money=n=>new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(n);
-const categoryFromText=t=>{t=t.toLowerCase();if(t.includes("preschool"))return"preschool";if(t.includes("primary"))return"primary";if(t.includes("skill"))return"skills";return"all"};
+const categoryFromText=t=>{t=t.toLowerCase();if(t.includes("preschool"))return"preschool";if(t.includes("primary"))return"primary";if(t.includes("skill"))return"skills";if(t.includes("high"))return"high";return"all"};
 const grid=document.getElementById("ccl-book-grid");
 if(!grid)return;
 
 const overlay=document.createElement("div");overlay.className="ccl-overlay";overlay.id="ccl-overlay";
 const drawer=document.createElement("aside");drawer.className="ccl-cart-drawer";drawer.setAttribute("aria-label","Shopping cart");
-drawer.innerHTML='<div class="ccl-cart-head"><div><small>YOUR BASKET</small><h2>Digital books</h2></div><button class="ccl-icon-button" type="button" data-cart-close aria-label="Close cart">×</button></div><div class="ccl-cart-items" id="ccl-cart-items"></div><div class="ccl-cart-foot"><div class="ccl-cart-total"><span>Total</span><span id="ccl-cart-total">R0.00</span></div><button class="ccl-checkout-button" type="button" id="ccl-start-checkout">Continue to checkout</button><p class="ccl-test-note">Setup mode — no payment can be taken yet.</p></div>';
+drawer.innerHTML='<div class="ccl-cart-head"><div><small>YOUR BASKET</small><h2>Digital books</h2></div><button class="ccl-icon-button" type="button" data-cart-close aria-label="Close cart">×</button></div><div class="ccl-cart-items" id="ccl-cart-items"></div><div class="ccl-cart-foot"><div class="ccl-cart-total"><span>Total</span><span id="ccl-cart-total">R0.00</span></div><button class="ccl-checkout-button" type="button" id="ccl-start-checkout">Yoco checkout coming soon</button><p class="ccl-test-note">Browse books here, but payments are not available yet.</p></div>';
 const fab=document.createElement("button");fab.type="button";fab.className="ccl-cart-fab";fab.innerHTML='🛒 Basket <span class="ccl-cart-count" id="ccl-cart-count">0</span>';
 const modalWrap=document.createElement("div");modalWrap.className="ccl-modal-wrap";modalWrap.id="ccl-checkout-wrap";
 modalWrap.innerHTML='<section class="ccl-checkout-modal" role="dialog" aria-modal="true" aria-labelledby="ccl-checkout-title"><div class="ccl-modal-head"><div><small>CHECKOUT PREVIEW</small><h2 id="ccl-checkout-title">Customer details</h2><p>This lets us test the full customer journey before Yoco is connected.</p></div><button class="ccl-icon-button" type="button" data-checkout-close aria-label="Close checkout">×</button></div><div class="ccl-checkout-body"><div class="ccl-checkout-grid"><label class="ccl-field full">Full name<input id="ccl-name" autocomplete="name" placeholder="Customer name"></label><label class="ccl-field">Email address<input id="ccl-email" type="email" autocomplete="email" placeholder="name@example.com"></label><label class="ccl-field">Phone number <span style="font-weight:400;color:#667">optional</span><input id="ccl-phone" type="tel" autocomplete="tel" placeholder="e.g. 071 234 5678"></label></div><div class="ccl-order-summary"><h3>Order summary</h3><div id="ccl-checkout-lines"></div><div class="ccl-summary-total"><span>Total</span><span id="ccl-checkout-total"></span></div></div><div class="ccl-license-note"><strong>When the live shop launches:</strong> payment will be confirmed securely before delivery. The customer will receive a private download link and a personalised PDF copy carrying their name and order number.</div><div class="ccl-preview-order" id="ccl-preview-order"></div><div class="ccl-checkout-actions"><button class="ccl-secondary" type="button" data-checkout-close>Back to basket</button><button class="ccl-primary" type="button" id="ccl-create-test-order">Create test order — no payment</button></div></div></section>';
@@ -25,14 +26,14 @@ const total=()=>cartProducts().reduce((s,p)=>s+p.price,0);
 function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove("show"),1800)}
 function openCart(){drawer.classList.add("open");overlay.classList.add("open");document.body.classList.add("ccl-cart-open")}
 function closeCart(){drawer.classList.remove("open");overlay.classList.remove("open");document.body.classList.remove("ccl-cart-open")}
-function openCheckout(){if(!cart.length)return;closeCart();renderCheckout();modalWrap.classList.add("open");document.body.classList.add("ccl-checkout-open")}
+function openCheckout(){if(!cart.length)return;showToast("Yoco checkout is coming soon — no payments can be taken yet.")}
 function closeCheckout(){modalWrap.classList.remove("open");document.body.classList.remove("ccl-checkout-open")}
 function add(id){if(!cart.includes(id)){cart.push(id);save();renderCart();showToast("Added to basket")}else{showToast("Already in your basket")}}
 function remove(id){cart=cart.filter(x=>x!==id);save();renderCart()}
 function renderProducts(filter="all"){
   const list=products.filter(p=>filter==="all"||p.category===filter);
-  if(!list.length){grid.innerHTML='<div class="ccl-empty"><strong>No books in this category yet.</strong><br>The catalogue is ready for the approved books when they are signed off.</div>';return}
-  grid.innerHTML=list.map(p=>'<article class="ccl-book-card"><div class="ccl-cover"><span class="ccl-preview-pill">'+(p.badge||"DIGITAL PDF")+'</span><div class="ccl-cover-book"><img src="assets/clever-new.png" alt=""><div><small>Clever Cubs Learning</small><b>'+p.title+'</b></div><small>'+p.categoryLabel+'</small></div></div><div class="ccl-card-body"><div class="ccl-card-meta"><span>'+p.categoryLabel+'</span><span>'+p.grade+'</span></div><h3>'+p.title+'</h3><p>'+p.description+'</p><div class="ccl-card-bottom"><span class="ccl-price">'+money(p.price)+'</span><button class="ccl-add" type="button" data-add="'+p.id+'">'+(p.demo?"Add demo to basket":"Add to basket")+'</button></div></div></article>').join("");
+  if(!list.length){grid.innerHTML='<div class="ccl-empty"><strong>No books in this category yet.</strong><br>Published PDF books will appear here once added through the admin.</div>';return}
+  grid.innerHTML=list.map(p=>'<article class="ccl-book-card"><div class="ccl-cover"><span class="ccl-preview-pill">'+(p.badge||"DIGITAL PDF")+'</span><div class="ccl-cover-book"><img src="'+(p.image_url||"assets/clever-new.png")+'" alt=""><div><small>Clever Cubs Learning</small><b>'+p.title+'</b></div><small>'+p.categoryLabel+'</small></div></div><div class="ccl-card-body"><div class="ccl-card-meta"><span>'+p.categoryLabel+'</span><span>'+p.grade+'</span></div><h3>'+p.title+'</h3><p>'+p.description+'</p><div class="ccl-card-bottom"><span class="ccl-price">'+money(p.price)+'</span><button class="ccl-add" type="button" data-add="'+p.id+'">'+(p.demo?"Add demo to basket":"Add to basket")+'</button></div></div></article>').join("");
   grid.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>add(b.dataset.add)));
 }
 function renderCart(){
@@ -41,7 +42,7 @@ function renderCart(){
   document.getElementById("ccl-cart-total").textContent=money(total());
   document.getElementById("ccl-start-checkout").disabled=!list.length;
   const box=document.getElementById("ccl-cart-items");
-  if(!list.length){box.innerHTML='<div class="ccl-cart-empty"><strong>Your basket is empty.</strong><p>Add a demo book to test the cart.</p></div>';return}
+  if(!list.length){box.innerHTML='<div class="ccl-cart-empty"><strong>Your basket is empty.</strong><p>Add a published PDF book to get started.</p></div>';return}
   box.innerHTML=list.map(p=>'<div class="ccl-cart-item"><div><strong>'+p.title+'</strong><small>'+p.categoryLabel+' · Digital PDF</small><button type="button" class="ccl-remove" data-remove="'+p.id+'">Remove</button></div><strong>'+money(p.price)+'</strong></div>').join("");
   box.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>remove(b.dataset.remove)));
 }
