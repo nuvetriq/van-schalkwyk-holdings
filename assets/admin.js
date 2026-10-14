@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
 const BUSINESSES = {
   grannys: { label: "GRANNY’S", categories: ["Gourmet Popcorn", "Party Snacks", "Baked Goods", "Jars", "Recipe Books", "Other"] },
-  "clever-cubs": { label: "CLEVER CUBS", categories: ["Preschool", "Primary School", "High School", "Life Skills", "Other"] }
+  "clever-cubs": { label: "CleverCubs Learning", categories: ["Preschool", "Primary School", "High School", "Life Skills", "Other"] }
 };
 const productsEndpoint = "/.netlify/functions/admin-products";
 const imagesEndpoint = "/.netlify/functions/product-image";
@@ -57,7 +57,7 @@ function refreshPdfControls() {
   const book = isDigitalBook();
   $("book-pdf-controls").hidden = !book;
   $("pdf-label").textContent = business === "clever-cubs"
-    ? "Clever Cubs learning book PDF (private, max 3 MB)"
+    ? "CleverCubs Learning learning book PDF (private, max 3 MB)"
     : "Granny's recipe book PDF (private, max 3 MB)";
   $("remove-pdf-wrapper").hidden = !book || !editingPdfPath;
   if (book && editingPdfPath) $("pdf-status").textContent =
