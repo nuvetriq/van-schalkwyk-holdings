@@ -1,10 +1,15 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>Yoco sandbox result | Holdings</title><link rel="stylesheet" href="assets/admin.css"></head>
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<title>Yoco sandbox result | Holdings</title>
+<link rel="stylesheet" href="assets/admin.css">
+<script defer src="assets/book-order-test.js"></script></head>
 <body><header class="topbar"><a class="brand" href="admin.html"><img src="assets/vs-transparent.svg" width="40" height="40" alt=""><span>VAN SCHALKWYK HOLDINGS</span></a></header>
 <main class="wrap" style="max-width:720px;padding-block:50px"><section class="panel" style="padding:32px">
-<p class="eyebrow">TEST CHECKOUT ONLY</p><h1 style="font:normal 38px Georgia,serif">Yoco test redirect received</h1>
-<p>Your browser has returned from the Yoco sandbox. A redirect is <strong>not proof of payment</strong>. Payment verification and automatic PDF delivery are not active in this build.</p>
-<p>No live payment has been requested by this test flow and no books have been emailed.</p>
-<p>Next we'll connect a signed webhook and check the order before enabling customer purchases.</p>
-<a class="button primary" href="book-test-checkout.html">Back to test checkout</a>
-</section></main>
-</body></html>
+<p class="eyebrow">TEST CHECKOUT ONLY</p><h1 style="font:normal 38px Georgia,serif">Yoco sandbox result</h1>
+<p>Returning from Yoco is <strong>not proof of payment</strong>. Only a signed Yoco webhook can verify this sandbox payment against your test order.</p>
+<p id="payment-test-result" class="message" role="status" aria-live="polite">Use the button below to check verification.</p>
+<button class="button primary" id="check-payment-status" type="button">Check signed payment status</button>
+<p>No real payment has been requested. This test never emails PDFs or gives download access.</p>
+<a class="button" href="book-test-checkout.html">Back to test checkout</a>
+</section></main></body></html>
