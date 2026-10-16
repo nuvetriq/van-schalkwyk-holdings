@@ -51,3 +51,26 @@ The owner has configured `VSH_YOCO_TEST_CHECKOUT` separately from `YOCO_SECRET_K
 ## Deploy Preview rebuild after corrected Yoco flag
 
 On 14 October 2026, the owner found that `VSH_YOCO_TEST_CHECKOUT` had been mistakenly configured as **false** for Deploy Previews and **true** for Branch deploys. The owner has now corrected the Netlify settings: **Deploy Previews = true; Branch deploys = false; Production = false**. Trigger **one** new Deploy Preview with this documentation-only commit to load the corrected Functions environment. Do not activate `VSH_ENABLE_PAYMENTS`, do not alter `YOCO_SECRET_KEY`, and do not deploy unfinished checkout functionality to production.
+
+
+## 16 October 2026 — signed sandbox payment verification (preview rebuild)
+
+The test-only webhook has been extended in this branch to match signed `payment.succeeded` events against the server-created Yoco checkout mapping and the corresponding immutable order details. A matching test order becomes `test_payment_verified` with `testPaymentVerified: true`; critically, `paymentVerified` stays `false`, and **no order is marked `paid`, no customer email is sent, and no PDF download is issued**. The test result page has a private admin-key-protected button to check this status.
+
+The website owner reports that these values have now been configured in Netlify for **Deploy Previews** (not production):
+
+- `VSH_YOCO_TEST_CHECKOUT=true`
+- `VSH_YOCO_VERIFY_ONLY=true`
+- `YOCO_SECRET_KEY`: existing Yoco `sk_test_` key, kept private
+- `YOCO_WEBHOOK_SECRET`: the separately registered Yoco `whsec_` webhook signing secret, kept private
+
+This **documentation-only** commit is intentionally used to trigger **one fresh Deploy Preview build** to load those Functions environment settings. It does not change the checkout or verification code and must not be merged to production as a payment launch.
+
+### Verification after Netlify reports a successful preview deploy
+
+1. Use the **newest** Deploy Preview #2 (not the public production site) and sign in to its Admin Portal.
+2. Since preview data is isolated by deployment, check whether the published R10 test PDF remains available. If not, upload/publish a fresh test PDF in that preview.
+3. Confirm the Yoco test webhook subscription points to `https://deploy-preview-2--van-schalkwyk-holdings.netlify.app/.netlify/functions/yoco-books-webhook` and is registered using the **test** Yoco API key.
+4. From `/book-test-checkout.html`, submit a sandbox order, complete Yoco's test payment, and return to `/book-order-test.html`.
+5. Click **Check signed payment status**. Only a verified, matching signed Yoco event should display success. If the page still says awaiting payment, diagnose webhook delivery/signature before trying more builds or payments.
+6. Leave `VSH_ENABLE_PAYMENTS` OFF. Do not publish the preview or enable email fulfilment.
