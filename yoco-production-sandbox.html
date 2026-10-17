@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<title>Admin-only Yoco R10 sandbox | Van Schalkwyk Holdings</title>
+<link rel="stylesheet" href="assets/admin.css">
+<script src="assets/yoco-production-sandbox.js" defer></script>
+</head><body>
+<main class="wrap">
+<section class="panel">
+<p class="eyebrow">ADMIN-ONLY TEST / NO REAL ORDERS</p>
+<h1>Yoco R10 sandbox</h1>
+<p>This page checks signed Yoco test payments using isolated test orders. It never takes a live payment or sends or downloads a PDF.</p>
+<form id="sandbox-checkout">
+<label for="sandbox-key">Master admin key (if not already signed in)</label>
+<input id="sandbox-key" type="password" autocomplete="off" spellcheck="false" placeholder="Enter admin key if needed">
+<label for="sandbox-business">Business</label>
+<select id="sandbox-business"><option value="grannys">Granny's</option><option value="clever-cubs">CleverCubs Learning</option></select>
+<button class="button primary" type="submit">Start R10 TEST checkout</button>
+</form>
+<button class="button" id="sandbox-status" type="button" hidden>Check signed payment verification</button>
+<p id="sandbox-feedback" role="status" aria-live="polite">No test checkout started.</p>
+<p><a href="admin.html">Back to Admin Portal</a></p>
+</section>
+</main>
+</body></html>
