@@ -27,6 +27,8 @@ jobs:
         run: npm run build
       - name: Test sandbox runtime gate and webhook signatures
         run: node --test scripts/test-yoco-sandbox.mjs
+      - name: Run full simulated Yoco checkout and signed webhook integration tests
+        run: node --experimental-vm-modules --test scripts/test-yoco-sandbox-integration.mjs
       - name: Check server and client JavaScript syntax
         run: |
           find netlify -type f -name '*.mjs' -print0 | xargs -0 -r -n1 node --check
