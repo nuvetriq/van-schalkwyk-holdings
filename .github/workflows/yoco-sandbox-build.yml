@@ -1,0 +1,42 @@
+name: Isolated Yoco Sandbox Build & Tests
+
+on:
+  push:
+    branches:
+      - feature/holdings-yoco-r10-main-isolated
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and verify (no deployment)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout isolated test branch
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run website build
+        run: npm run build
+      - name: Test sandbox runtime gate and webhook signatures
+        run: node --test scripts/test-yoco-sandbox.mjs
+      - name: Check server and client JavaScript syntax
+        run: |
+          find netlify -type f -name '*.mjs' -print0 | xargs -0 -r -n1 node --check
+          find assets -type f -name '*.js' -print0 | xargs -0 -r -n1 node --check
+      - name: Verify published output keeps server files private
+        run: |
+          test -f dist/index.html
+          test -f dist/yoco-production-sandbox.html
+          test -f dist/assets/yoco-production-sandbox.js
+          test ! -e dist/netlify
+          test ! -e dist/package.json
+          test ! -e dist/PRODUCTION-YOCO-SANDBOX-REVIEW.md
+          test ! -e dist/scripts
