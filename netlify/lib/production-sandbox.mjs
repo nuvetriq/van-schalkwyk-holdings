@@ -19,7 +19,6 @@ export function sandboxEnabled(request, context) {
   try {
     const url = new URL(request.url);
     return context?.deploy?.context === "production" &&
-      process.env.CONTEXT === "production" &&
       url.origin === SITE &&
       process.env.VSH_YOCO_SANDBOX_ENABLED === "true" &&
       /^sk_test_[A-Za-z0-9_-]+$/.test(process.env.VSH_YOCO_SANDBOX_TEST_KEY || "") &&
