@@ -25,6 +25,9 @@ async function makeHarness() {
   let nextEtag = 0;
   let nextCheckout = 0;
   let upstreamRequests = 0;
+  // Failure controls affect ONLY this in-memory test harness.
+  const faults = {orderCasMisses: 0, mappingWriteFailures: 0,
+    orderReadFailures: 0, upstream: null, onMappingWrite: null};
   const getStore = ({name}) => {
     if (!namespaces.has(name)) namespaces.set(name, new Map());
     const entries = namespaces.get(name);
@@ -34,15 +37,35 @@ async function makeHarness() {
         return entry ? structuredClone(entry.value) : null;
       },
       async getWithMetadata(key) {
+        if (name === "vsh-production-yoco-sandbox-orders" && faults.orderReadFailures > 0) {
+          faults.orderReadFailures--;
+          throw new Error("Simulated temporary order storage read failure");
+        }
         const entry = entries.get(key);
         return entry ? {data: structuredClone(entry.value), etag: entry.etag} : null;
       },
       async setJSON(key, value, options = {}) {
+        if (name === "vsh-production-yoco-sandbox-checkouts" &&
+            options.onlyIfNew && faults.mappingWriteFailures > 0) {
+          faults.mappingWriteFailures--;
+          throw new Error("Simulated checkout mapping write failure");
+        }
+        if (name === "vsh-production-yoco-sandbox-orders" &&
+            options.onlyIfMatch && faults.orderCasMisses > 0) {
+          faults.orderCasMisses--;
+          return {modified: false};
+        }
         const prior = entries.get(key);
         if (options.onlyIfNew && prior) return { modified: false };
         if (options.onlyIfMatch && (!prior || prior.etag !== options.onlyIfMatch))
           return { modified: false };
         entries.set(key, {value: structuredClone(value), etag: String(++nextEtag)});
+        if (name === "vsh-production-yoco-sandbox-checkouts" &&
+            faults.onMappingWrite) {
+          const callback = faults.onMappingWrite;
+          faults.onMappingWrite = null;
+          await callback(structuredClone(value));
+        }
         return { modified: true };
       }
     };
@@ -57,10 +80,15 @@ async function makeHarness() {
     assert.equal(body.currency, "ZAR");
     assert.ok(["grannys", "clever-cubs"].includes(body.metadata.business));
     upstreamRequests++;
+    const failure = faults.upstream;
+    faults.upstream = null;
+    if (failure === "network") throw new Error("Simulated Yoco outage");
     return Response.json({
       id: "checkout_localTest" + (++nextCheckout),
-      redirectUrl: "https://c.yoco.com/checkout/local-test",
-      amount: 1000, currency: "ZAR", processingMode: "test"
+      redirectUrl: failure === "redirect" ? "https://example.org/not-yoco" :
+        "https://c.yoco.com/checkout/local-test",
+      amount: failure === "amount" ? 999 : 1000,
+      currency: "ZAR", processingMode: failure === "mode" ? "live" : "test"
     });
   };
   const context = vm.createContext({
@@ -158,7 +186,7 @@ async function makeHarness() {
     const store = namespaces.get("vsh-production-yoco-sandbox-orders");
     return store?.get("order/" + orderId + ".json")?.value.checkoutId;
   };
-  return {checkout, status, webhook, event, checkoutId, env,
+  return {checkout, status, webhook, event, checkoutId, env, faults,
     get upstreamRequests() { return upstreamRequests; }};
 }
 
@@ -221,5 +249,84 @@ for (const business of ["grannys", "clever-cubs"]) {
     const otherPayment = await h.webhook(h.event(id, orderId, business, {id: "pay_DIFFERENT"}));
     assert.equal(otherPayment.http, 409);
     assert.equal((await h.status(orderId)).data.testPaymentVerified, true);
+  });
+}
+
+
+for (const business of ["grannys", "clever-cubs"]) {
+  test("Concurrent duplicate signed webhooks — " + business, async () => {
+    const h = await makeHarness();
+    const {data: created} = await h.checkout(business);
+    const payment = h.event(h.checkoutId(created.orderId), created.orderId, business);
+    const responses = await Promise.all(Array.from({length: 8}, () => h.webhook(payment)));
+    assert.ok(responses.every(r => r.http === 200), JSON.stringify(responses));
+    assert.equal(responses.filter(r => !r.data.duplicate).length, 1);
+    assert.equal((await h.status(created.orderId)).data.testPaymentVerified, true);
+    assert.equal((await h.status(created.orderId)).data.realPaymentVerified, false);
+  });
+
+  test("Storage contention retries, then safe failure and recovery — " + business, async () => {
+    const h = await makeHarness();
+    const {data: created} = await h.checkout(business);
+    const payment = h.event(h.checkoutId(created.orderId), created.orderId, business);
+    h.faults.orderCasMisses = 2;
+    const recovered = await h.webhook(payment);
+    assert.equal(recovered.http, 200);
+    assert.equal(recovered.data.testVerified, true);
+
+    const other = await makeHarness();
+    const {data: second} = await other.checkout(business);
+    const secondPayment = other.event(other.checkoutId(second.orderId), second.orderId, business);
+    other.faults.orderCasMisses = 6;
+    const blocked = await other.webhook(secondPayment);
+    assert.equal(blocked.http, 503);
+    assert.equal((await other.status(second.orderId)).data.testPaymentVerified, false);
+    const retry = await other.webhook(secondPayment);
+    assert.equal(retry.http, 200);
+    assert.equal((await other.status(second.orderId)).data.testPaymentVerified, true);
+  });
+
+  test("Webhook arrives before pending order mapping is final — " + business, async () => {
+    const h = await makeHarness();
+    let premature = null, deferredPayment = null;
+    h.faults.onMappingWrite = async mapping => {
+      deferredPayment = h.event(mapping.checkoutId, mapping.orderId, business);
+      premature = await h.webhook(deferredPayment);
+    };
+    const checkout = await h.checkout(business);
+    assert.equal(checkout.http, 201);
+    assert.equal(premature.http, 503);
+    assert.equal((await h.status(checkout.data.orderId)).data.testPaymentVerified, false);
+    const redelivered = await h.webhook(deferredPayment);
+    assert.equal(redelivered.http, 200);
+    assert.equal((await h.status(checkout.data.orderId)).data.testPaymentVerified, true);
+  });
+
+  test("Upstream and storage faults stay test-only and fail closed — " + business, async () => {
+    for (const failure of ["network", "amount", "mode", "redirect"]) {
+      const h = await makeHarness();
+      h.faults.upstream = failure;
+      const result = await h.checkout(business);
+      assert.equal(result.http, failure === "network" ? 503 : 502);
+      assert.notEqual(result.data.testOnly, true);
+      assert.equal(h.upstreamRequests, 1);
+    }
+    const brokenMapping = await makeHarness();
+    brokenMapping.faults.mappingWriteFailures = 1;
+    assert.equal((await brokenMapping.checkout(business)).http, 503);
+    assert.equal(brokenMapping.upstreamRequests, 1);
+    const brokenRead = await makeHarness();
+    const {data: created} = await brokenRead.checkout(business);
+    brokenRead.faults.orderReadFailures = 1;
+    const payment = brokenRead.event(
+      brokenRead.checkoutId(created.orderId), created.orderId, business);
+    assert.equal((await brokenRead.webhook(payment)).http, 503);
+    assert.equal((await brokenRead.status(created.orderId)).data.testPaymentVerified, false);
+    assert.equal((await brokenRead.webhook(payment)).http, 200);
+    const status = await brokenRead.status(created.orderId);
+    assert.equal(status.data.testPaymentVerified, true);
+    assert.equal(status.data.realPaymentVerified, false);
+    assert.equal(status.data.emailSent, false);
+    assert.equal(status.data.pdfDelivered, false);
   });
 }
