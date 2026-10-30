@@ -51,10 +51,17 @@ export default async function handler(request, context) {
       if(!item)return json({error:"Test order not indexed yet."},503);
       const o=item.data;
       if(o.id!==mapping.orderId || o.business!==mapping.business ||
-         o.purpose!==PURPOSE || o.checkoutId!==checkoutId ||
-         o.amount!==AMOUNT || o.currency!==CURRENCY || o.mode!=="test" ||
+         o.purpose!==PURPOSE || o.amount!==AMOUNT ||
+         o.currency!==CURRENCY || o.mode!=="test" ||
          o.paymentVerified!==false || o.emailSent!==false || o.pdfDelivered!==false)
         return json({error:"Test order verification mismatch."},400);
+      // Yoco may deliver a signed callback after the checkout mapping has
+      // been saved but before the order's checkout ID has been finalised.
+      // Treat this specific state as transient so Yoco can retry the event.
+      if(o.status==="checkout_pending" && o.checkoutId===null)
+        return json({error:"Test order awaiting checkout mapping."},503);
+      if(o.checkoutId!==checkoutId)
+        return json({error:"Test order checkout ID mismatch."},400);
       if(o.status==="test_payment_verified"){
         if(o.testPaymentId!==paymentId)return json({error:"Payment ID conflict."},409);
         return json({ok:true,testVerified:true,duplicate:true});
