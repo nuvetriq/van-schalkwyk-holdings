@@ -1,0 +1,40 @@
+name: Shared Digital Book Cart — Build & Tests
+
+on:
+  push:
+    branches:
+      - feature/shared-mixed-brand-cart
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install build dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build public website
+        run: npm run build
+      - name: Test shared cart state, cross-shop markup, no payment
+        run: node --test scripts/test-shared-book-cart.mjs
+      - name: Check updated scripts
+        run: |
+          node --check assets/shared-book-cart-core.js
+          node --check assets/shared-book-cart.js
+          node --check assets/clever-cubs-shop.js
+      - name: Verify public bundle and private server separation
+        run: |
+          test -f dist/grannys-little-bakery.html
+          test -f dist/clever-cubs-learning.html
+          test -f dist/assets/shared-book-cart.js
+          test -f dist/assets/shared-book-cart-core.js
+          test -f dist/assets/shared-book-cart.css
+          test ! -e dist/netlify
+          test ! -e dist/scripts
