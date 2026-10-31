@@ -4,6 +4,17 @@
 import crypto from "node:crypto";
 
 export const BRANDS = Object.freeze(["grannys", "clever-cubs"]);
+// Public mailbox identities only. Credentials stay exclusively in Netlify.
+export const BRAND_EMAILS = Object.freeze({
+  grannys:Object.freeze({
+    name:"Granny's",sender:"grannyspopsandtreats@gmail.com",
+    salesInbox:"grannyspopsandtreats@gmail.com"
+  }),
+  "clever-cubs":Object.freeze({
+    name:"CleverCubs Learning",sender:"learningclevercubs@gmail.com",
+    salesInbox:"learningclevercubs@gmail.com"
+  })
+});
 export const BOOK_LIMIT = 20;
 export const MAX_CENTS = 5_000_000;
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -113,6 +124,8 @@ export function brandEmailPayload(sale) {
   const titles=sale.items.map(item=>String(item.title).slice(0,120));
   return {
     business:sale.business,brandOrderRef:sale.brandOrderRef,
+    deliveryFrom:BRAND_EMAILS[sale.business].sender,
+    salesNotificationTo:BRAND_EMAILS[sale.business].salesInbox,
     customerEmail:sale.customer.email,customerName:sale.customer.name,
     purchasedTitles:titles,brandSubtotalCents:sale.subtotalCents,
     bookPaths:sale.items.map(item=>item.pdfPath)
