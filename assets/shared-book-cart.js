@@ -128,9 +128,11 @@
   });
 
   function add(business,id) {
-    const item=products.get(key(business,String(id)));
-    if(!item){note.textContent="This book is not currently available. Please try again.";show();return false}
+    // Product buttons are rendered from the published catalogue, but the
+    // shared cart's second catalogue fetch may still be finishing. Save the
+    // validated SKU now and independently refresh its current availability.
     const result=cart.add(business,id);
+    if(result && !products.has(key(business,String(id))))refreshCatalogue(business);
     if(!result && cart.items().length>=core.MAX)
       note.textContent="Your basket can hold up to "+core.MAX+" books. Remove an item before adding another.";
     show();
