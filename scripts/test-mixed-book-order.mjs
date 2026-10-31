@@ -47,6 +47,11 @@ test("Brand delivery/owner notifications cannot include other brand titles or fi
  assert.deepEqual(cubs.purchasedTitles,["Grade RR Afrikaans"]);
  assert.deepEqual(granny.bookPaths,[pdf("grannys",a)]);
  assert.deepEqual(cubs.bookPaths,[pdf("clever-cubs",b)]);
+ assert.equal(granny.deliveryFrom,"grannyspopsandtreats@gmail.com");
+ assert.equal(granny.salesNotificationTo,"grannyspopsandtreats@gmail.com");
+ assert.equal(cubs.deliveryFrom,"learningclevercubs@gmail.com");
+ assert.equal(cubs.salesNotificationTo,"learningclevercubs@gmail.com");
+ assert.notEqual(granny.salesNotificationTo,cubs.salesNotificationTo);
  assert.equal(JSON.stringify(granny).includes("Grade RR"),false);
  assert.equal(JSON.stringify(cubs).includes("Granny"),false);
  assert.equal(granny.brandSubtotalCents+cubs.brandSubtotalCents,21499);
