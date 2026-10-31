@@ -24,6 +24,8 @@ jobs:
         run: npm run build
       - name: Test shared cart state, cross-shop markup, no payment
         run: node --test scripts/test-shared-book-cart.mjs
+      - name: Test mixed-brand master checkout snapshot and isolated sales
+        run: node --test scripts/test-mixed-book-order.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
