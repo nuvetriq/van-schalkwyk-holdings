@@ -76,6 +76,8 @@ jobs:
         run: node --test scripts/test-mixed-book-yoco-test-payment-handoff.mjs
       - name: Verify admin-only checkout route, real stored catalogue and durable Yoco binding
         run: node --test scripts/test-mixed-book-yoco-test-endpoint.mjs
+      - name: Verify signed Yoco TEST webhook HTTP route and no-send guards
+        run: node --test scripts/test-mixed-book-yoco-test-webhook-http.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
