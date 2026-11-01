@@ -18,6 +18,8 @@ const checkout=read("netlify/functions/mixed-book-yoco-test-checkout.mjs");
 const webhook=read("netlify/functions/mixed-book-yoco-test-webhook.mjs");
 const statusPage=read("netlify/functions/mixed-book-yoco-test-order-status.mjs");
 const pdfDownload=read("netlify/functions/paid-book-download.mjs");
+const emailDispatch=read("netlify/lib/mixed-book-brand-email-dispatch-draft.mjs");
+const privateLink=read("netlify/lib/mixed-book-paid-grant-service.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
 const tree=(dir,base=dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
@@ -49,6 +51,7 @@ test("Production build stays public-only without leaked customer PDF or SQL serv
     const content=read(f);
     assert.doesNotMatch(content,/sk_(?:live|test)_[A-Za-z0-9_-]{15,}/);
     assert.doesNotMatch(content,/whsec_[A-Za-z0-9+/]{15,}/);
+    assert.doesNotMatch(content,/vshlk_[A-Za-z0-9+/]{43}=/);
     assert.doesNotMatch(content,/postgres(?:ql)?:\/\/[^ \n"'<>]+/i);
   }
 });
@@ -75,6 +78,20 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(pdfDownload,/Cross-Origin-Resource-Policy/);
   assert.doesNotMatch(pdfDownload,/payments\.yoco\.com/);
   assert.doesNotMatch(pdfDownload,/getStore\("vsh-products"\)/);
+  assert.match(emailDispatch,/enabled=false/);
+  assert.match(emailDispatch,/claimMixedBookEmail/);
+  assert.match(emailDispatch,/holdMixedEmailUnknown/);
+  assert.match(privateLink,/VSH_MIXED_BOOK_LINK_KEY/);
+  assert.doesNotMatch(emailDispatch,/smtp\.gmail\.com/);
+  assert.doesNotMatch(emailDispatch,/https:\/\/payments\.yoco\.com/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_LINK_KEY/);
+  for(const name of tree("netlify/functions")){
+    const source=read(name);
+    assert.doesNotMatch(source,/dispatchOneMixedBrandEmail/,
+      "No deployed HTTP handler may invoke draft email dispatch");
+    assert.doesNotMatch(source,/ensureCommittedPaidBookLinks/,
+      "No unapproved HTTP handler may create paid book links");
+  }
 
   assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
 });
