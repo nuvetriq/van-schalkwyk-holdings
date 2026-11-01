@@ -120,6 +120,8 @@ jobs:
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
         run: node --test scripts/test-mixed-book-migration-readiness.mjs
+      - name: Keep Netlify owner evidence and dated backup approval as explicit NO-GO
+        run: node --test scripts/test-mixed-book-owner-release-evidence.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
