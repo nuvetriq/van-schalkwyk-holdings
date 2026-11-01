@@ -130,3 +130,22 @@ test("Never stores DB credentials or activates migration in public site bundle",
   const fs=await import("node:fs");
   assert.equal(fs.existsSync("netlify/database/migrations"),false);
 });
+
+test("Mixed-book database service exposes gated transactional and scoped operations",async()=>{
+  const {createMixedBookServices}=await import("../netlify/lib/mixed-book-db-service.mjs");
+  let created=0;
+  const options={
+    context:preview,enabled:"true",
+    databaseFactory(){created++;return {pool:dummyPool}}
+  };
+  const service=createMixedBookServices(options);
+  assert.equal(created,1);
+  assert.equal(typeof service.createPendingOrder,"function");
+  assert.equal(typeof service.bindYocoCheckout,"function");
+  assert.equal(typeof service.settleAfterVerifiedWebhook,"function");
+  assert.equal(typeof service.loadPaidBrandSale,"function");
+  assert.equal(typeof service.grantStore.findByHash,"function");
+  assert.equal(typeof service.orderStore.findById,"function");
+  assert.equal(await service.loadPaidBrandSale(orderId,"grannys"),null);
+  assert.throws(()=>createMixedBookServices({...options,enabled:"false"}));
+});
