@@ -85,9 +85,13 @@ CREATE TABLE vsh_mixed_download_grants (
   order_id uuid NOT NULL,
   business text NOT NULL,
   product_id uuid NOT NULL,
+  -- Stable random nonce; never a plaintext customer token. Kept so a server
+  -- with its separate secret can reconstruct the SAME link after a crash.
+  token_nonce uuid NOT NULL UNIQUE,
   expires_at timestamptz NOT NULL,
   revoked_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(order_id,business,product_id),
   FOREIGN KEY (order_id,business,product_id)
     REFERENCES vsh_mixed_order_lines(order_id,business,product_id) ON DELETE RESTRICT
 );
