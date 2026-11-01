@@ -34,6 +34,8 @@ jobs:
         run: node --test scripts/test-mixed-book-ledger.mjs
       - name: Test brand-only email templates and safe outbox transitions
         run: node --test scripts/test-mixed-book-email-outbox.mjs
+      - name: Verify bounded 2 GiB private PDF part planning and checksums
+        run: node --test scripts/test-mixed-book-private-pdf-parts.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
