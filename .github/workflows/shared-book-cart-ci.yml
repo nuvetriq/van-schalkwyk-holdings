@@ -62,6 +62,8 @@ jobs:
             -e PGPASSWORD=ci-local-only-not-a-real-secret postgres:16-alpine \
             psql --host=127.0.0.1 --username=ci_test --dbname=vsh_bookshop_ci \
             --set=ON_ERROR_STOP=1 --file=/workspace/scripts/test-mixed-book-real-postgres.sql
+      - name: Verify Netlify Database runtime connection and private scoped reads
+        run: node --test scripts/test-mixed-book-db-adapters.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
