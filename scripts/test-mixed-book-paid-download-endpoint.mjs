@@ -215,7 +215,7 @@ test("A corrupt or too-large private blob fails closed with no PDF bytes",async(
     business:"clever-cubs",productId:ccBook,pdfPath:smallKey,
     blobBytes:Buffer.alloc(PDF_PART_BYTES+1)
   });
-  assert.equal((await big.handler(new Request(big.url()),context)).status,503);
+  assert.equal((await big.handler(big.req(),context)).status,503);
 });
 test("Refuses non-POST method and never exposes private tokens or data in errors",async()=>{
   const f=makeTest();
