@@ -16,6 +16,7 @@ const expectedTables=[
 ];
 const checkout=read("netlify/functions/mixed-book-yoco-test-checkout.mjs");
 const webhook=read("netlify/functions/mixed-book-yoco-test-webhook.mjs");
+const statusPage=read("netlify/functions/mixed-book-yoco-test-order-status.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
 const tree=(dir,base=dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
@@ -51,7 +52,7 @@ test("Production build stays public-only without leaked customer PDF or SQL serv
   }
 });
 test("Both Yoco endpoints are disabled until explicit test flags and database setup",()=>{
-  for(const source of [checkout,webhook]){
+  for(const source of [checkout,webhook,statusPage]){
     assert.match(source,/VSH_MIXED_BOOK_DB_ENABLED\s*===\s*"true"/);
     assert.match(source,/VSH_MIXED_YOCO_TEST_ENABLED\s*===\s*"true"/);
     assert.match(source,/VSH_ENABLE_PAYMENTS\s*!==\s*"true"/);
@@ -64,6 +65,9 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(webhook,/verifyMixedYocoWebhookEnvelope/);
   assert.match(webhook,/handleMixedBookYocoTestEvent/);
   assert.match(checkout,/rateLimit/);
+  assert.match(statusPage,/authStatus/);
+  assert.match(statusPage,/loadYocoTestOrder/);
+  assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
 });
 test("No checkout function added to public cart or Netlify config enables payments",()=>{
   const assets=[
