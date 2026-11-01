@@ -108,7 +108,11 @@ test("Unexpected, invalid and oversized DB data fail closed without message deta
 });
 test("SQL/connection errors do not enable a worker or send an email",async()=>{
   const f=fixture({error:true});
-  await assert.rejects(create(f).inspect(),/private-db-error/);
+  await assert.rejects(create(f).inspect(),error=>{
+    assert.equal(error.message,"Email outbox review unavailable.");
+    assert.ok(!error.message.includes("@"));
+    return true;
+  });
   assert.deepEqual(f.calls.map(c=>c.kind),["open","query"]);
 });
 test("Preview is server-only; no scheduled/HTTP handler or public secret added",async()=>{
