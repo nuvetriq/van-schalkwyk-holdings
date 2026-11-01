@@ -70,6 +70,8 @@ jobs:
         run: node --test scripts/test-mixed-book-real-db-service.mjs
       - name: Verify signed Yoco Checkout webhooks and independent checkout reconciliation
         run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
+      - name: Verify one Yoco TEST charge and safe checkout redirect
+        run: node --test scripts/test-mixed-book-yoco-test-checkout.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
