@@ -21,6 +21,7 @@ const pdfDownload=read("netlify/functions/paid-book-download.mjs");
 const emailDispatch=read("netlify/lib/mixed-book-brand-email-dispatch-draft.mjs");
 const smtpDraft=read("netlify/lib/mixed-book-gmail-smtp-draft.mjs");
 const workerDraft=read("netlify/lib/mixed-book-email-worker-draft.mjs");
+const operatorReview=read("netlify/lib/mixed-book-email-operator-review.mjs");
 const privateLink=read("netlify/lib/mixed-book-paid-grant-service.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
@@ -90,6 +91,11 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(workerDraft,/operatorApproved=false/);
   assert.match(workerDraft,/enabled=false/);
   assert.doesNotMatch(workerDraft,/export default async function handler/);
+  assert.match(operatorReview,/enabled=false,operatorApproved=false/);
+  assert.match(operatorReview,/VSH_MIXED_BOOK_EMAIL_REVIEW_ENABLED/);
+  assert.doesNotMatch(operatorReview,/dispatchOneMixedBrandEmail/);
+  assert.doesNotMatch(operatorReview,/UPDATE vsh_mixed_email_outbox/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_EMAIL_REVIEW_ENABLED/);
   assert.match(smtpDraft,/VSH_MIXED_BOOK_EMAIL_ENABLED/);
   assert.match(smtpDraft,/VSH_ENABLE_PAYMENTS/);
   assert.match(smtpDraft,/smtp\.gmail\.com/);
@@ -113,6 +119,11 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
       "No unapproved HTTP handler may import email worker");
     assert.doesNotMatch(source,/createControlledMixedBookEmailWorker/,
       "No unapproved HTTP handler may run email worker");
+    assert.doesNotMatch(source,/mixed-book-email-operator-review/,
+      "Operator preview must never be a public Netlify Function");
+    assert.doesNotMatch(source,/createMixedBookEmailOperatorReview/,
+      "Operator preview may not be invoked by HTTP");
+
 
 
   }
