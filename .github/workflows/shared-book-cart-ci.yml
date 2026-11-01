@@ -64,6 +64,10 @@ jobs:
             --set=ON_ERROR_STOP=1 --file=/workspace/scripts/test-mixed-book-real-postgres.sql
       - name: Verify Netlify Database runtime connection and private scoped reads
         run: node --test scripts/test-mixed-book-db-adapters.mjs
+      - name: Exercise official Netlify Database client on ephemeral PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-db-service.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
