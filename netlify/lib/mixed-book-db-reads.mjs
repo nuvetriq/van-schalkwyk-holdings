@@ -19,6 +19,17 @@ const moneyInt=value=>{
 export function createMixedBookDbReads(pool){
   checkPool(pool);
   return Object.freeze({
+    // Minimal fields for signed TEST webhook settlement, no customer PII,
+    // snapshot or private file paths ever leave this server-only lookup.
+    async loadYocoTestOrder(orderId){
+      if(typeof orderId!=="string" || !UUID.test(orderId))return null;
+      const result=await pool.query(
+        `SELECT id,checkout_id,amount_cents,processing_mode,status
+         FROM vsh_mixed_orders WHERE id=$1 AND processing_mode='test'`,
+        [orderId]
+      );
+      return result.rows?.[0] ?? null;
+    },
     async loadPaidBrandSale(orderId,business){
       if(typeof orderId!=="string" || !UUID.test(orderId) ||
          !BRANDS.includes(business))
