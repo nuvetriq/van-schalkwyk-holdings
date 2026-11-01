@@ -160,6 +160,18 @@ test("HMAC-confirmed Yoco TEST payment settles one shared order in REAL Postgres
     assert.equal(ignored.status,200);
     assert.equal((await ignored.json()).ignored,true);
   } finally {
-    await database.pool.end();
+    // Same disposable CI-only cleanup; never leave paid test orders or
+    // stray events in the database used by subsequent integration tests.
+    const id=master.id;
+    try{
+      for(const table of [
+        "vsh_mixed_download_grants","vsh_mixed_email_outbox",
+        "vsh_mixed_payment_events","vsh_mixed_brand_sales",
+        "vsh_mixed_order_lines","vsh_mixed_orders"
+      ]){
+        const column=table==="vsh_mixed_orders"?"id":"order_id";
+        await database.pool.query("DELETE FROM "+table+" WHERE "+column+"=$1",[id]);
+      }
+    }finally{await database.pool.end()}
   }
 });
