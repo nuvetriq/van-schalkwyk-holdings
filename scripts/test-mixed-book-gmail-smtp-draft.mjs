@@ -171,7 +171,7 @@ test("Nodemailer supports offline JSON transport without Gmail network access",a
  const serialized=JSON.parse(result.message);
  assert.equal(serialized.from.name,"Granny's");
  assert.equal(serialized.from.address,"grannyspopsandtreats@gmail.com");
- assert.equal(serialized.to.address,"buyer@example.invalid");
+ assert.equal((Array.isArray(serialized.to)?serialized.to[0]:serialized.to).address,"buyer@example.invalid");
  assert.equal(serialized.messageId,fakeSend.messageId);
  assert.ok(!JSON.stringify(serialized).includes(env.VSH_GRANNYS_SMTP_APP_PASSWORD));
 });
