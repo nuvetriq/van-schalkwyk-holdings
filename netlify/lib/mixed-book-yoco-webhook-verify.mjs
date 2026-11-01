@@ -81,11 +81,17 @@ function eventBody(rawBody){
      (event.id!==undefined && !EVENT_ID.test(event.id)))reject();
   return event;
 }
-export function verifySignedMixedYocoWebhook({
+export function verifyMixedYocoWebhookEnvelope({
   rawBody,headers,secret,nowMs=Date.now()
 }={}) {
   const signature=signedBody({rawBody,headers,secret,nowMs});
   const event=eventBody(rawBody);
+  return {signature,event};
+}
+export function verifySignedMixedYocoWebhook({
+  rawBody,headers,secret,nowMs=Date.now()
+}={}) {
+  const {signature,event}=verifyMixedYocoWebhookEnvelope({rawBody,headers,secret,nowMs});
   // The authenticated webhook-id header is a provider event identifier even
   // when the JSON body omits its own id. Do not require optional event.id.
   const eventId=event.id ?? signature.signedWebhookId;
