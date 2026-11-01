@@ -90,6 +90,8 @@ jobs:
         run: node --test scripts/test-mixed-book-yoco-test-order-status.mjs
       - name: Verify existing admin PDF upload manifests and checkout agree
         run: node --test scripts/test-mixed-book-upload-compatibility.mjs
+      - name: Verify paid-live private PDF parts, secret grants and disabled customer delivery
+        run: node --test scripts/test-mixed-book-paid-download-endpoint.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
