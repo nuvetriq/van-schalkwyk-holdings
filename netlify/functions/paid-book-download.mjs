@@ -4,7 +4,7 @@
  * an unexpired, non-revoked grant for this exact product in a verified
  * PAID LIVE master order; access is checked on EVERY request.
  *
- * Each response contains ONE verified part <= 3 MiB (never a 2 GiB PDF).
+ * Each POST returns ONE verified part <= 3 MiB (never a 2 GiB PDF).
  * A future same-origin browser download UI must assemble parts incrementally;
  * this Function alone is NOT a working full-size browser download.
  * Signed Yoco TEST orders never receive valid grants.
@@ -33,19 +33,31 @@ function enabled(request,context,env){
       env.VSH_MIXED_BOOK_DOWNLOADS_ENABLED==="true";
   }catch{return false}
 }
-function parseSelection(request) {
+// The short-lived token is supplied only as an Authorization header on POST.
+// It must not appear in URL query strings, access logs, referers or HTML.
+// JSON body is limited to {part: integer}; do not infer payment from the UI.
+async function parseSelection(request) {
   const url=new URL(request.url);
-  if([...url.searchParams.keys()].some(key=>!["token","part"].includes(key)) ||
-    url.searchParams.getAll("token").length!==1 ||
-    url.searchParams.getAll("part").length>1)
+  if(url.search || url.hash)return null;
+  const origin=request.headers.get("origin");
+  if(origin!==null && origin!==ORIGIN)return null;
+  const auth=request.headers.get("authorization")||"";
+  const match=/^Bearer ([A-Za-z0-9_-]{43})$/.exec(auth);
+  if(!match)return null;
+  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get("content-type")||""))
     return null;
-  const token=url.searchParams.get("token");
-  const part=url.searchParams.get("part");
-  if(!TOKEN.test(token||"") || (part!==null && !/^(0|[1-9][0-9]{0,3})$/.test(part)))
-    return null;
-  const index=part===null?0:Number(part);
-  if(!Number.isSafeInteger(index)||index<0||index>9999)return null;
-  return {token,index};
+  const length=request.headers.get("content-length");
+  if(length!==null && Number(length)>100)return null;
+  try{
+    const raw=await request.text();
+    if(Buffer.byteLength(raw,"utf8")>100)return null;
+    const data=JSON.parse(raw);
+    if(!data || typeof data!=="object" || Array.isArray(data) ||
+      Object.keys(data).length!==1 ||
+      !Object.hasOwn(data,"part") || !Number.isSafeInteger(data.part) ||
+      data.part<0 || data.part>9999)return null;
+    return {token:match[1],index:data.part};
+  }catch{return null}
 }
 export function makePaidBookDownloadHandler({
   env=process.env,
@@ -55,10 +67,10 @@ export function makePaidBookDownloadHandler({
   now=()=>new Date()
 }={}){
   return async function handler(request,context){
-    if(request.method!=="GET")return reply({error:"Method not allowed."},405);
+    if(request.method!=="POST")return reply({error:"Method not allowed."},405);
     if(!enabled(request,context,env))
       return reply({error:"Book downloads are not available."},503);
-    const selection=parseSelection(request);
+    const selection=await parseSelection(request);
     if(!selection)return reply({error:"Book download unavailable."},404);
     try{
       const db=databaseFactory({context});
@@ -110,6 +122,6 @@ export function makePaidBookDownloadHandler({
 }
 export default makePaidBookDownloadHandler();
 export const config={
-  method:"GET",
+  method:"POST",
   rateLimit:{action:"rate_limit",aggregateBy:"ip",windowSize:60,windowLimit:120}
 };
