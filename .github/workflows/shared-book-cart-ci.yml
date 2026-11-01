@@ -86,6 +86,8 @@ jobs:
         run: node --test scripts/test-mixed-book-release-gates.mjs
       - name: Protect legacy Yoco Deploy Preview 2 events from shared-order database
         run: node --test scripts/test-mixed-book-legacy-webhook-isolation.mjs
+      - name: Verify restricted admin-only Yoco TEST order status without customer data
+        run: node --test scripts/test-mixed-book-yoco-test-order-status.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
