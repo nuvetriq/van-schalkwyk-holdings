@@ -137,7 +137,7 @@ test("Checkout binding race is retryable, not a false paid acknowledgement",asyn
 });
 test("Missing authoritative checkout identity is retryable until Yoco association verified",async()=>{
   const {handler,calls}=app();
-  const res=await handler(signed({checkout:undefined}),production);
+  const res=await handler(signed({checkout:null}),production);
   assert.equal(res.status,503);
   assert.ok(!calls.some(x=>x.startsWith("settle:")));
 });
