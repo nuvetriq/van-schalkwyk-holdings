@@ -26,6 +26,7 @@ export function createMixedBookEmailOperatorReview({
     typeof poolFactory!=="function")unavailable();
   return Object.freeze({
     async inspect(){
+      try{
       const pool=poolFactory({context,enabled:"true"});
       if(!pool || typeof pool.query!=="function")unavailable();
       // Read-only SELECT with no customer identity, order ID, recipient,
@@ -73,6 +74,11 @@ export function createMixedBookEmailOperatorReview({
         nonPaidOrderJobs:blocked,
         byBrand:Object.freeze(byBrand),groups:Object.freeze(groups)
       });
+      }catch{
+        // Keep database error details and potentially personal SQL metadata
+        // away from any later authorized operator UI.
+        throw Error("Email outbox review unavailable.");
+      }
     }
   });
 }
