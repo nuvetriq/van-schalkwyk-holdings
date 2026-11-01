@@ -28,6 +28,8 @@ jobs:
         run: node --test scripts/test-mixed-book-order.mjs
       - name: Test post-payment brand email routing and no-send sandbox
         run: node --test scripts/test-mixed-book-fulfilment-plan.mjs
+      - name: Verify secure per-book download token lifecycle and draft SQL schema
+        run: node --test scripts/test-mixed-book-download-grants.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
