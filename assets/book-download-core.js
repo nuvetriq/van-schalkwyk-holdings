@@ -85,6 +85,9 @@ export async function savePaidBook(token,{
     for(let index=0;;index++){
       if(signal?.aborted)throw Error("Download cancelled.");
       const part=await fetchPaidBookPart(token,index,{transport,signal});
+      // A cancellation can arrive while a network request is resolving. Do
+      // not write that returned part after the user has cancelled.
+      if(signal?.aborted)throw Error("Download cancelled.");
       if(index===0){
         expectedCount=part.count;expectedSize=part.size;
         if(expectedCount>1 && !writer)
