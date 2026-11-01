@@ -78,7 +78,7 @@ function eventBody(rawBody){
   try{event=JSON.parse(rawBody)}catch{reject()}
   if(!event || typeof event!=="object" || Array.isArray(event) ||
      typeof event.type!=="string" ||
-     !EVENT_ID.test(event.id||""))reject();
+     (event.id!==undefined && !EVENT_ID.test(event.id)))reject();
   return event;
 }
 export function verifySignedMixedYocoWebhook({
@@ -86,13 +86,16 @@ export function verifySignedMixedYocoWebhook({
 }={}) {
   const signature=signedBody({rawBody,headers,secret,nowMs});
   const event=eventBody(rawBody);
+  // The authenticated webhook-id header is a provider event identifier even
+  // when the JSON body omits its own id. Do not require optional event.id.
+  const eventId=event.id ?? signature.signedWebhookId;
   const acceptedEvents=new Set(["payment.succeeded","payment.failed",
     "refund.succeeded","refund.failed"]);
   if(!acceptedEvents.has(event.type))
-    return {ignored:true,type:event.type,eventId:event.id,
+    return {ignored:true,type:event.type,eventId,
       signedWebhookId:signature.signedWebhookId};
   if(event.type!=="payment.succeeded")
-    return {ignored:true,type:event.type,eventId:event.id,
+    return {ignored:true,type:event.type,eventId,
       signedWebhookId:signature.signedWebhookId};
   const payment=event.payload;
   if(!payment || typeof payment!=="object" || Array.isArray(payment) ||
@@ -113,7 +116,7 @@ export function verifySignedMixedYocoWebhook({
   if(meta.checkoutId && payment.checkoutId &&
      meta.checkoutId!==payment.checkoutId)reject();
   return {
-    ignored:false,eventId:event.id,
+    ignored:false,eventId,
     signedWebhookId:signature.signedWebhookId,
     orderId:meta.orderId.toLowerCase(),checkoutCandidate,
     paymentId:payment.id,amountCents:payment.amount,
