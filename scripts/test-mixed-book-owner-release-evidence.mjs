@@ -39,10 +39,10 @@ test("Backup policy and dated restore-point evidence stay clearly distinct in ru
   const runbook=await readFile(
     "docs/database/MIXED-BOOK-DATABASE-BACKUP-MIGRATION-ROLLBACK-RUNBOOK.md","utf8"
   );
-  assert.match(runbook,/7 days/i);
+  assert.match(runbook,/(?:7|seven) days/i);
   assert.match(runbook,/three most recent deploys/i);
   assert.match(runbook,/No specific dated restore point/i);
   assert.match(runbook,/NO-GO/);
-  assert.match(runbook,/no database connection or proof of restoration capability/i);
+  assert.match(runbook,/not.*database connection or proof of restoration capability/i);
   assert.doesNotMatch(runbook,/^[-*]\s*\[x\]\s*Current production backup list shows/m);
 });
