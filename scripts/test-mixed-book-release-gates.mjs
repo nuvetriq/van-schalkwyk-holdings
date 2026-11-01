@@ -17,6 +17,7 @@ const expectedTables=[
 const checkout=read("netlify/functions/mixed-book-yoco-test-checkout.mjs");
 const webhook=read("netlify/functions/mixed-book-yoco-test-webhook.mjs");
 const statusPage=read("netlify/functions/mixed-book-yoco-test-order-status.mjs");
+const pdfDownload=read("netlify/functions/paid-book-download.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
 const tree=(dir,base=dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
@@ -67,6 +68,14 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(checkout,/rateLimit/);
   assert.match(statusPage,/authStatus/);
   assert.match(statusPage,/loadYocoTestOrder/);
+  assert.match(pdfDownload,/VSH_MIXED_BOOK_DB_ENABLED\s*===\s*"true"/);
+  assert.match(pdfDownload,/VSH_MIXED_BOOK_DOWNLOADS_ENABLED\s*===\s*"true"/);
+  assert.match(pdfDownload,/context\s*===\s*"production"/);
+  assert.match(pdfDownload,/readAuthorizedPaidBookPart/);
+  assert.match(pdfDownload,/Cross-Origin-Resource-Policy/);
+  assert.doesNotMatch(pdfDownload,/payments\.yoco\.com/);
+  assert.doesNotMatch(pdfDownload,/getStore\("vsh-products"\)/);
+
   assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
 });
 test("No checkout function added to public cart or Netlify config enables payments",()=>{
@@ -77,6 +86,9 @@ test("No checkout function added to public cart or Netlify config enables paymen
   ].join("\n");
   assert.doesNotMatch(assets,/mixed-book-yoco-test-(?:checkout|webhook)/);
   assert.doesNotMatch(assets,/VSH_MIXED_YOCO_TEST_ENABLED/);
+  assert.doesNotMatch(assets,/paid-book-download/);
+  assert.doesNotMatch(assets,/VSH_MIXED_BOOK_DOWNLOADS_ENABLED/);
+
   assert.doesNotMatch(site,/^\s*VSH_(?:ENABLE_PAYMENTS|MIXED_YOCO_TEST_ENABLED|MIXED_BOOK_DB_ENABLED)\s*=/m);
   assert.match(site,/publish\s*=\s*"dist"/);
 });
