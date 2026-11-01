@@ -53,11 +53,12 @@ function validPaidDownloadLink(link,id) {
   if(!link || link.id!==id || typeof link.url!=="string")return false;
   try {
     const url=new URL(link.url);
-    const token=url.searchParams.get("token");
+    const token=url.hash.startsWith("#token=")?url.hash.slice(7):"";
     return url.origin===urlOrigin &&
-      url.pathname==="/.netlify/functions/paid-book-download" &&
-      [...url.searchParams.keys()].length===1 && TOKEN.test(token||"") &&
-      !url.username && !url.password && !url.hash;
+      url.pathname==="/book-download.html" &&
+      url.search==="" && TOKEN.test(token) &&
+      url.hash==="#token="+token &&
+      !url.username && !url.password;
   }catch{return false}
 }
 
