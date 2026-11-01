@@ -89,7 +89,18 @@ test("Official Netlify Database pool commits ONE payment with brand-specific sal
     );
     assert.equal(paymentRows.rows[0].count,1);
   }finally{
-    // No live SMTP or Yoco resources exist here; service is purely SQL.
-    await database.pool.end();
+    // DELETE only our synthetic order from disposable local CI PostgreSQL.
+    // Avoid leaving dispatchable paid LIVE outbox jobs for later tests.
+    const id=master.id;
+    try{
+      for(const table of [
+        "vsh_mixed_download_grants","vsh_mixed_email_outbox",
+        "vsh_mixed_payment_events","vsh_mixed_brand_sales",
+        "vsh_mixed_order_lines","vsh_mixed_orders"
+      ]){
+        const column=table==="vsh_mixed_orders"?"id":"order_id";
+        await database.pool.query("DELETE FROM "+table+" WHERE "+column+"=$1",[id]);
+      }
+    }finally{await database.pool.end()}
   }
 });
