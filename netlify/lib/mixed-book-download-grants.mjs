@@ -71,6 +71,8 @@ export function bookDownloadUrl(token,origin="https://vanschalkwykholdings.com")
   const url=new URL(origin);
   if(url.origin!=="https://vanschalkwykholdings.com" || url.username || url.password)
     throw Error("Invalid public download origin.");
-  // Endpoint doesn't exist yet. Building a URL is NOT delivering the file.
-  return url.origin+"/.netlify/functions/paid-book-download?token="+encodeURIComponent(token);
+  // URL fragment is not transmitted in HTTP requests or Referrer headers.
+  // A same-origin download page scrubs the fragment immediately, then uses
+  // authenticated POST requests. Never include this token in a query string.
+  return url.origin+"/book-download.html#token="+encodeURIComponent(token);
 }
