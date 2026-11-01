@@ -143,3 +143,12 @@ test("Unsupported types are signed but never trigger paid settlement",()=>{
  assert.equal(output.ignored,true);
  assert.throws(()=>reconcileSignedYocoEventForOrder(output,stored));
 });
+
+test("Signed Yoco webhook without JSON event.id uses the authenticated webhook-id",()=>{
+ const payload=event();
+ delete payload.id;
+ const output=verifySignedMixedYocoWebhook(signed(payload));
+ assert.equal(output.signedWebhookId,"msg_Example1234");
+ assert.equal(output.eventId,"msg_Example1234");
+ assert.equal(output.paymentId,"pay_Example001");
+});
