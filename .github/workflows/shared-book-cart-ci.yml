@@ -30,6 +30,8 @@ jobs:
         run: node --test scripts/test-mixed-book-fulfilment-plan.mjs
       - name: Verify secure per-book download token lifecycle and draft SQL schema
         run: node --test scripts/test-mixed-book-download-grants.mjs
+      - name: Test atomic database ledger, rollback and duplicate events
+        run: node --test scripts/test-mixed-book-ledger.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
