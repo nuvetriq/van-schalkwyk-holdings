@@ -48,10 +48,11 @@ VALUES
   '{"titles":["Grade RR Afrikaans"]}');
 
 INSERT INTO vsh_mixed_download_grants
- (token_hash,order_id,business,product_id,expires_at)
+ (token_hash,order_id,business,product_id,token_nonce,expires_at)
 VALUES (
  repeat('a',64),'f3ff94aa-79f3-4de1-b9e2-0f112fe2df56',
- 'grannys','ac20bc30-83b6-4fa2-b034-e5129232a210',now()+interval '2 days'
+ 'grannys','ac20bc30-83b6-4fa2-b034-e5129232a210',
+ 'c0af7828-aa67-4a7f-b1a3-5a2baf118739',now()+interval '2 days'
 );
 
 DO $$
@@ -101,11 +102,11 @@ BEGIN
   END;
   BEGIN
     INSERT INTO vsh_mixed_download_grants
-      (token_hash,order_id,business,product_id,expires_at)
+      (token_hash,order_id,business,product_id,token_nonce,expires_at)
     VALUES
       (repeat('b',64),'f3ff94aa-79f3-4de1-b9e2-0f112fe2df56',
        'clever-cubs','ac20bc30-83b6-4fa2-b034-e5129232a210',
-       now()+interval '2 days');
+       '09cb4c75-9c5d-4978-b417-a53b9680bbf0',now()+interval '2 days');
     RAISE EXCEPTION 'Cross-brand PDF grant was accepted!';
   EXCEPTION WHEN foreign_key_violation THEN NULL;
   END;
