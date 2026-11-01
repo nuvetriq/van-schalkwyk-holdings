@@ -20,6 +20,7 @@ const statusPage=read("netlify/functions/mixed-book-yoco-test-order-status.mjs")
 const pdfDownload=read("netlify/functions/paid-book-download.mjs");
 const emailDispatch=read("netlify/lib/mixed-book-brand-email-dispatch-draft.mjs");
 const smtpDraft=read("netlify/lib/mixed-book-gmail-smtp-draft.mjs");
+const workerDraft=read("netlify/lib/mixed-book-email-worker-draft.mjs");
 const privateLink=read("netlify/lib/mixed-book-paid-grant-service.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
@@ -86,6 +87,9 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(emailDispatch,/claimMixedBookEmail/);
   assert.match(emailDispatch,/holdMixedEmailUnknown/);
   assert.match(smtpDraft,/enabled=false/);
+  assert.match(workerDraft,/operatorApproved=false/);
+  assert.match(workerDraft,/enabled=false/);
+  assert.doesNotMatch(workerDraft,/export default async function handler/);
   assert.match(smtpDraft,/VSH_MIXED_BOOK_EMAIL_ENABLED/);
   assert.match(smtpDraft,/VSH_ENABLE_PAYMENTS/);
   assert.match(smtpDraft,/smtp\.gmail\.com/);
@@ -105,6 +109,11 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
       "No deployed HTTP handler may import draft SMTP");
     assert.doesNotMatch(source,/createMixedBookGmailSender/,
       "No deployed HTTP handler may send branded mail");
+    assert.doesNotMatch(source,/mixed-book-email-worker-draft/,
+      "No unapproved HTTP handler may import email worker");
+    assert.doesNotMatch(source,/createControlledMixedBookEmailWorker/,
+      "No unapproved HTTP handler may run email worker");
+
 
   }
 
