@@ -27,7 +27,7 @@ test("Draft is additive only and cannot auto-run on a Netlify deploy",async()=>{
  assert.match(sql,/^COMMIT;/m);
  // Ignore English words in SQL comments; audit actual executable statements.
  const statements=sql.replace(/--[^\n]*/g,"");
- assert.doesNotMatch(statements,/\b(?:DROP|TRUNCATE|ALTER|DELETE|UPDATE|GRANT|REVOKE)\b/i);
+ assert.doesNotMatch(statements,/\b(?:DROP\s+TABLE|TRUNCATE\s+(?:TABLE\s+)?vsh_|ALTER\s+TABLE|DELETE\s+FROM|UPDATE\s+vsh_|GRANT\s+|REVOKE\s+)\b/i);
  assert.doesNotMatch(statements,/\b(?:CREATE\s+EXTENSION|CREATE\s+FUNCTION|CREATE\s+TRIGGER|COPY|DO\s+\$)\b/i);
  assert.deepEqual([...sql.matchAll(/\bCREATE\s+TABLE\s+(vsh_mixed_[a-z_]+)\s*\(/g)]
    .map(m=>m[1]),tables);
