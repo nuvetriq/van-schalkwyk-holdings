@@ -11,7 +11,7 @@
 import {BRANDS,UUID} from "./mixed-book-order.mjs";
 
 const SITE="https://vanschalkwykholdings.com";
-const URL="https://payments.yoco.com/api/checkouts";
+const YOCO_API_URL="https://payments.yoco.com/api/checkouts";
 const CHECKOUT=/^checkout_[A-Za-z0-9_-]{5,150}$/;
 const KEY=/^sk_test_[A-Za-z0-9_-]{8,}$/;
 
@@ -40,7 +40,7 @@ function requireSnapshot(order){
 export function buildMixedYocoTestCheckout(order){
   requireSnapshot(order);
   return Object.freeze({
-    url:URL,
+    url:YOCO_API_URL,
     idempotencyKey:"vsh-mixed-test-"+order.id.toLowerCase(),
     payload:{
       amount:order.amountCents,
