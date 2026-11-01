@@ -26,6 +26,8 @@ jobs:
         run: node --test scripts/test-shared-book-cart.mjs
       - name: Test mixed-brand master checkout snapshot and isolated sales
         run: node --test scripts/test-mixed-book-order.mjs
+      - name: Test post-payment brand email routing and no-send sandbox
+        run: node --test scripts/test-mixed-book-fulfilment-plan.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
