@@ -103,7 +103,7 @@ test("Unexpected, invalid and oversized DB data fail closed without message deta
       order_status:"paid",jobs:1,expired_claims:0
     }))
   ]){
-    await assert.rejects(create(fixture({rows})).inspect(),/not enabled/);
+    await assert.rejects(create(fixture({rows})).inspect(),/review unavailable/);
   }
 });
 test("SQL/connection errors do not enable a worker or send an email",async()=>{
