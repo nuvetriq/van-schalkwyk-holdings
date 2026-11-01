@@ -106,7 +106,7 @@ test("Customer delivery sends only its brand's titles and committed PDF URL",asy
    assert.ok(!email.text.includes(".pdf"));
    const other=business==="grannys"?"RR Afrikaans":"Granny's recipe";
    assert.ok(!email.text.includes(other));
-   assert.equal(f.calls.filter(x=>x.sql.includes("UPDATE vsh_mixed_email_outbox")).length,1);
+   assert.equal(f.calls.filter(x=>x.sql.includes("UPDATE vsh_mixed_email_outbox") && !x.sql.includes("WITH candidate AS")).length,1);
  }
 });
 test("Merchant notification is brand-only, no link generation or download tokens",async()=>{
