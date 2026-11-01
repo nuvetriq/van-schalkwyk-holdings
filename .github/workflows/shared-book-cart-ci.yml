@@ -92,6 +92,8 @@ jobs:
         run: node --test scripts/test-mixed-book-upload-compatibility.mjs
       - name: Verify paid-live private PDF parts, secret grants and disabled customer delivery
         run: node --test scripts/test-mixed-book-paid-download-endpoint.mjs
+      - name: Test private customer download page, secure POST parts and bounded disk writes
+        run: node --test scripts/test-paid-book-browser-download.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
