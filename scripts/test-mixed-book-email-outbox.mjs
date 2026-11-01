@@ -58,7 +58,7 @@ test("Both customer emails use separate senders, brand totals and only owned lin
     assert.ok(!email.text.includes(".pdf"));
     assert.ok(!email.html.includes(".pdf"));
     assert.ok(email.text.includes("R"+(sale.subtotalCents/100).toFixed(2)));
-    assert.ok(email.text.includes("paid-book-download"));
+    assert.ok(email.text.includes("book-download.html"));
     if(sale.business==="grannys")
       assert.ok(email.from.includes("grannyspopsandtreats@gmail.com"));
     else assert.ok(email.from.includes("learningclevercubs@gmail.com"));
@@ -71,7 +71,7 @@ test("Brand merchant notice has only its own sale, not other lines or PDF links"
     const email=composeMixedBookBrandEmail({job,sale});
     assert.equal(email.to,job.sender);
     assert.ok(email.text.includes("Buyer Example"));
-    assert.ok(!email.text.includes("paid-book-download"));
+    assert.ok(!email.text.includes("book-download.html"));
     assert.ok(!email.text.includes(".pdf"));
     assert.ok(!email.html.includes(".pdf"));
     assert.ok(!email.text.includes(sale.business==="grannys"?"Grade RR":"Granny"));
