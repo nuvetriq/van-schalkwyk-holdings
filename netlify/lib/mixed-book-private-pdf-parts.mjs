@@ -56,7 +56,7 @@ export function privatePdfPartPlan({business,pdfPath,manifest=null,smallPdfBytes
     if(index!==0 || !Number.isSafeInteger(smallPdfBytes) ||
       smallPdfBytes<8 || smallPdfBytes>PDF_PART_BYTES)
       bad("Invalid small-book length or part.");
-    return {business,partIndex:0,partCount:1,sizeBytes:smallPdfBytes,
+    return {business,chunked:false,partIndex:0,partCount:1,sizeBytes:smallPdfBytes,
       expectedPartBytes:smallPdfBytes,offset:0,
       storeName:storage.small,storeKey:pdfPath};
   }
@@ -64,7 +64,7 @@ export function privatePdfPartPlan({business,pdfPath,manifest=null,smallPdfBytes
   if(index>=record.partCount)bad("Requested book part is outside the PDF.");
   const offset=index*PDF_PART_BYTES;
   const expectedPartBytes=Math.min(PDF_PART_BYTES,record.sizeBytes-offset);
-  return {business,partIndex:index,partCount:record.partCount,
+  return {business,chunked:true,partIndex:index,partCount:record.partCount,
     sizeBytes:record.sizeBytes,expectedPartBytes,offset,
     storeName:storage.large,
     storeKey:business+"/"+record.uploadId+"/part/"+String(index).padStart(5,"0")};
@@ -79,7 +79,7 @@ export function validatePrivatePdfPartBytes(plan,bytes,blobMetadata=null) {
   if(bytes.byteLength!==plan.expectedPartBytes)
     bad("Private PDF part has an unexpected length.");
   const meta=blobMetadata?.metadata || blobMetadata;
-  if(plan.partCount>1) {
+  if(plan.chunked===true) {
     if(!meta || !HASH.test(meta.sha256||"") ||
       meta.bytes!==plan.expectedPartBytes ||
       crypto.createHash("sha256").update(bytes).digest("hex")!==meta.sha256.toLowerCase())
