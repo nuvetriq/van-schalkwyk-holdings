@@ -13,6 +13,20 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci_test
+          POSTGRES_PASSWORD: ci-local-only-not-a-real-secret
+          POSTGRES_DB: vsh_bookshop_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_test -d vsh_bookshop_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,6 +52,16 @@ jobs:
         run: node --test scripts/test-mixed-book-private-pdf-parts.mjs
       - name: Verify paid-only private PDF part reader
         run: node --test scripts/test-mixed-book-paid-pdf-reader.mjs
+      - name: Test draft SQL in an ephemeral real PostgreSQL 16 database
+        run: |
+          docker run --rm --network host --mount type=bind,src="$PWD",dst=/workspace,readonly \
+            -e PGPASSWORD=ci-local-only-not-a-real-secret postgres:16-alpine \
+            psql --host=127.0.0.1 --username=ci_test --dbname=vsh_bookshop_ci \
+            --set=ON_ERROR_STOP=1 --file=/workspace/docs/database/mixed-book-orders-DRAFT.sql
+          docker run --rm --network host --mount type=bind,src="$PWD",dst=/workspace,readonly \
+            -e PGPASSWORD=ci-local-only-not-a-real-secret postgres:16-alpine \
+            psql --host=127.0.0.1 --username=ci_test --dbname=vsh_bookshop_ci \
+            --set=ON_ERROR_STOP=1 --file=/workspace/scripts/test-mixed-book-real-postgres.sql
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
