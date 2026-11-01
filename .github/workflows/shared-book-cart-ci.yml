@@ -116,6 +116,10 @@ jobs:
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
         run: node --test scripts/test-mixed-book-real-email-operator-review.mjs
+      - name: Audit add-only draft migration constraints in disposable PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-migration-readiness.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
