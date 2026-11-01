@@ -92,12 +92,12 @@ function makeTest({business="grannys",pdfPath=largeKey,
   const handler=makePaidBookDownloadHandler({
     env,databaseFactory,blobFactory,now:()=>now
   });
-  const url=(part=null)=>ROOT+"?token="+token+(part===null?"":"&part="+part);
-  return {token,grant,order,calls,handler,url};
+  const req=(part=0)=>new Request(ROOT,{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({part})});
+  return {token,grant,order,calls,handler,req};
 }
 test("Paid live grant serves only one 3 MiB verified Granny's PDF part",async()=>{
   const f=makeTest();
-  const res=await f.handler(new Request(f.url(0)),context);
+  const res=await f.handler(f.req(0),context);
   assert.equal(res.status,200);
   assert.equal(res.headers.get("content-type"),"application/octet-stream");
   assert.equal(res.headers.get("content-length"),String(PDF_PART_BYTES));
@@ -111,10 +111,11 @@ test("Paid live grant serves only one 3 MiB verified Granny's PDF part",async()=
   assert.ok(f.calls.includes("part:grannys/"+grUpload+"/part/00000"));
   assert.ok(f.calls.every(x=>!x.includes("clever-cubs")));
   assert.equal(config.rateLimit.windowLimit,120);
+  assert.equal(config.method,"POST");
 });
 test("Second part is bounded, checks SHA256 and has correct EOF",async()=>{
   const f=makeTest();
-  const res=await f.handler(new Request(f.url(1)),context);
+  const res=await f.handler(f.req(1),context);
   assert.equal(res.status,200);
   assert.equal(res.headers.get("x-book-part-index"),"1");
   assert.equal(res.headers.get("content-length"),"111");
@@ -126,7 +127,7 @@ test("Small CleverCubs PDF can be read from the private manifest store without g
   const f=makeTest({
     business:"clever-cubs",productId:ccBook,pdfPath:smallKey
   });
-  const res=await f.handler(new Request(f.url()),context);
+  const res=await f.handler(f.req(),context);
   assert.equal(res.status,200);
   assert.equal(res.headers.get("x-book-part-count"),"1");
   assert.deepEqual(Buffer.from(await res.arrayBuffer()),small);
@@ -144,25 +145,41 @@ test("Invalid, expired, revoked, refunded, test-only and cross-brand access neve
   ];
   for(const patch of fixtures){
     const f=makeTest(patch);
-    const res=await f.handler(new Request(f.url()),context);
+    const res=await f.handler(f.req(),context);
     assert.equal(res.status,404);
     assert.ok(!f.calls.some(x=>x.startsWith("part:")||x.startsWith("smallPDF:")));
   }
   const f=makeTest();
-  assert.equal((await f.handler(new Request(ROOT+"?token=nope"),context)).status,404);
+  assert.equal((await f.handler(new Request(ROOT+"?token=nope",{method:"POST",headers:{"Authorization":"Bearer "+f.token,"Content-Type":"application/json"},body:JSON.stringify({part:0})}),context)).status,404);
   assert.equal(f.calls.length,0);
 });
-test("Malformed part numbers and extra query parameters never reach the database",async()=>{
+test("Reject malformed JSON parts, tokens in URL and extra parameters before DB",async()=>{
   const f=makeTest();
-  for(const url of [
-    f.url(-1),f.url("01"),f.url(3.5),f.url("10000"),
-    f.url(0)+"&token=repeat",
-    f.url(0)+"&merchant=secret",
-    ROOT+"?part=0",
-    ROOT+"?token="+f.token+"&part=0&part=1"
-  ]){
-    assert.equal((await f.handler(new Request(url),context)).status,404);
+  const invalid=[
+    {part:-1},{part:"01"},{part:3.5},{part:10000},
+    {part:0,anything:"extra"},{},{part:null}
+  ];
+  for(const value of invalid){
+    const req=new Request(ROOT,{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+f.token,"Content-Type":"application/json"},
+      body:JSON.stringify(value)
+    });
+    assert.equal((await f.handler(req,context)).status,404);
   }
+  for(const url of [ROOT+"?token="+f.token,ROOT+"?part=0",ROOT+"?foo=bar"]){
+    const req=new Request(url,{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+f.token,"Content-Type":"application/json"},
+      body:'{"part":0}'
+    });
+    assert.equal((await f.handler(req,context)).status,404);
+  }
+  const noBearer=new Request(ROOT,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:'{"part":0}'
+  });
+  assert.equal((await f.handler(noBearer,context)).status,404);
   assert.equal(f.calls.length,0);
 });
 test("Feature disabled, wrong website or preview context cannot touch Blob or DB",async()=>{
@@ -176,20 +193,20 @@ test("Feature disabled, wrong website or preview context cannot touch Blob or DB
       env:settings,databaseFactory:()=>{throw Error("Unwanted database access");},
       blobFactory:()=>{throw Error("Unwanted blob access");}
     });
-    assert.equal((await handler(new Request(f.url()),context)).status,503);
+    assert.equal((await handler(f.req(),context)).status,503);
   }
   const f=makeTest();
   assert.equal((await f.handler(
-    new Request(f.url().replace("vanschalkwykholdings.com","wrong.example")),context
+    new Request(ROOT.replace("vanschalkwykholdings.com","wrong.example"),{method:"POST",headers:{"Authorization":"Bearer "+f.token,"Content-Type":"application/json"},body:'{"part":0}'}),context
   )).status,503);
-  assert.equal((await f.handler(new Request(f.url()),{
+  assert.equal((await f.handler(f.req(),{
     deploy:{context:"deploy-preview"}
   })).status,503);
   assert.equal(f.calls.length,0);
 });
 test("A corrupt or too-large private blob fails closed with no PDF bytes",async()=>{
   const f=makeTest({blobBytes:Buffer.alloc(PDF_PART_BYTES,0)});
-  const res=await f.handler(new Request(f.url()),context);
+  const res=await f.handler(f.req(),context);
   assert.equal(res.status,503);
   const data=await res.json();
   assert.equal(data.error,"Book download unavailable.");
@@ -200,12 +217,25 @@ test("A corrupt or too-large private blob fails closed with no PDF bytes",async(
   });
   assert.equal((await big.handler(new Request(big.url()),context)).status,503);
 });
-test("Refuses non-GET method and never exposes private tokens or data in errors",async()=>{
+test("Refuses non-POST method and never exposes private tokens or data in errors",async()=>{
   const f=makeTest();
-  const res=await f.handler(new Request(f.url(),{method:"POST"}),context);
+  const res=await f.handler(new Request(ROOT,{method:"GET"}),context);
   assert.equal(res.status,405);
   const raw=JSON.stringify(await res.json());
   assert.ok(!raw.includes(f.token));
   assert.ok(!raw.includes("vsh-private"));
   assert.equal(f.calls.length,0);
+});
+
+test("Reject cross-origin POST and ensure no token in server request URL",async()=>{
+  const f=makeTest();
+  assert.equal(f.req(0).url,ROOT);
+  assert.equal(f.req(0).headers.get("authorization"),"Bearer "+f.token);
+  const malicious=new Request(ROOT,{method:"POST",headers:{
+    "Authorization":"Bearer "+f.token,
+    "Content-Type":"application/json",
+    "Origin":"https://evil.example"
+  },body:'{"part":0}'});
+  assert.equal((await f.handler(malicious,context)).status,404);
+  assert.deepEqual(f.calls,[]);
 });
