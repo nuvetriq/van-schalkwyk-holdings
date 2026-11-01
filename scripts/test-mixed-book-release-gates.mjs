@@ -19,6 +19,7 @@ const webhook=read("netlify/functions/mixed-book-yoco-test-webhook.mjs");
 const statusPage=read("netlify/functions/mixed-book-yoco-test-order-status.mjs");
 const pdfDownload=read("netlify/functions/paid-book-download.mjs");
 const emailDispatch=read("netlify/lib/mixed-book-brand-email-dispatch-draft.mjs");
+const smtpDraft=read("netlify/lib/mixed-book-gmail-smtp-draft.mjs");
 const privateLink=read("netlify/lib/mixed-book-paid-grant-service.mjs");
 const schema=read("docs/database/mixed-book-orders-DRAFT.sql");
 const site=read("netlify.toml");
@@ -52,6 +53,9 @@ test("Production build stays public-only without leaked customer PDF or SQL serv
     assert.doesNotMatch(content,/sk_(?:live|test)_[A-Za-z0-9_-]{15,}/);
     assert.doesNotMatch(content,/whsec_[A-Za-z0-9+/]{15,}/);
     assert.doesNotMatch(content,/vshlk_[A-Za-z0-9+/]{43}=/);
+    assert.doesNotMatch(content,/VSH_(?:GRANNYS|CLEVERCUBS)_SMTP_APP_PASSWORD/);
+    assert.doesNotMatch(content,/nodemailer/);
+
     assert.doesNotMatch(content,/postgres(?:ql)?:\/\/[^ \n"'<>]+/i);
   }
 });
@@ -81,6 +85,12 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(emailDispatch,/enabled=false/);
   assert.match(emailDispatch,/claimMixedBookEmail/);
   assert.match(emailDispatch,/holdMixedEmailUnknown/);
+  assert.match(smtpDraft,/enabled=false/);
+  assert.match(smtpDraft,/VSH_MIXED_BOOK_EMAIL_ENABLED/);
+  assert.match(smtpDraft,/VSH_ENABLE_PAYMENTS/);
+  assert.match(smtpDraft,/smtp\.gmail\.com/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_EMAIL_ENABLED/);
+
   assert.match(privateLink,/VSH_MIXED_BOOK_LINK_KEY/);
   assert.doesNotMatch(emailDispatch,/smtp\.gmail\.com/);
   assert.doesNotMatch(emailDispatch,/https:\/\/payments\.yoco\.com/);
@@ -91,6 +101,11 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
       "No deployed HTTP handler may invoke draft email dispatch");
     assert.doesNotMatch(source,/ensureCommittedPaidBookLinks/,
       "No unapproved HTTP handler may create paid book links");
+    assert.doesNotMatch(source,/mixed-book-gmail-smtp-draft/,
+      "No deployed HTTP handler may import draft SMTP");
+    assert.doesNotMatch(source,/createMixedBookGmailSender/,
+      "No deployed HTTP handler may send branded mail");
+
   }
 
   assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
