@@ -84,6 +84,8 @@ jobs:
         run: node --test scripts/test-mixed-book-yoco-real-db-webhook.mjs
       - name: Enforce no automatic production migrations, no payments and no leaked secrets
         run: node --test scripts/test-mixed-book-release-gates.mjs
+      - name: Protect legacy Yoco Deploy Preview 2 events from shared-order database
+        run: node --test scripts/test-mixed-book-legacy-webhook-isolation.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
