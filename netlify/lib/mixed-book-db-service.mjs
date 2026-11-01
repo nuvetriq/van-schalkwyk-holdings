@@ -29,6 +29,9 @@ export function createMixedBookServices(options={}){
     },
     // Merchant/customer access checks are required in the caller. The SQL
     // itself filters both brand and paid/live state as defence in depth.
+    async loadYocoTestOrder(orderId){
+      return reads.loadYocoTestOrder(orderId);
+    },
     async loadPaidBrandSale(orderId,business){
       return reads.loadPaidBrandSale(orderId,business);
     },
