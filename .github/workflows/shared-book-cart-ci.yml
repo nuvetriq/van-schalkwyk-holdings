@@ -72,6 +72,8 @@ jobs:
         run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
       - name: Verify one Yoco TEST charge and safe checkout redirect
         run: node --test scripts/test-mixed-book-yoco-test-checkout.mjs
+      - name: Verify signed TEST Yoco handoff cannot dispatch PDFs or emails
+        run: node --test scripts/test-mixed-book-yoco-test-payment-handoff.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
