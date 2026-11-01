@@ -27,7 +27,7 @@ test("Creates unique random links and only stores SHA-256 token digest",()=>{
   assert.notEqual(a.token,b.token);
   assert.notEqual(a.grant.tokenHash,b.grant.tokenHash);
   assert.ok(!JSON.stringify(a.grant).includes(a.token));
-  assert.match(bookDownloadUrl(a.token),/^https:\/\/vanschalkwykholdings.com\/\.netlify\/functions\/paid-book-download\?token=/);
+  assert.match(bookDownloadUrl(a.token),/^https:\/\/vanschalkwykholdings.com\/book-download\.html#token=/);
 });
 test("Valid only for same paid order, brand and immutable purchased book",()=>{
   const {token,grant}=issued();
