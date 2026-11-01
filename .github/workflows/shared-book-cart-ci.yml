@@ -106,6 +106,10 @@ jobs:
         run: node --test scripts/test-mixed-book-gmail-smtp-draft.mjs
       - name: Verify disabled email worker connects paid-live SQL reads to separate Gmail transports
         run: node --test scripts/test-mixed-book-email-worker-draft.mjs
+      - name: Verify synthetic paid mixed order through SQL and simulated brand delivery
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-email-worker.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
