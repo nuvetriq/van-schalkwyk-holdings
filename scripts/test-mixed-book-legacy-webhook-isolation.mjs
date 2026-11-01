@@ -19,7 +19,7 @@ import {
 } from "../netlify/functions/mixed-book-yoco-test-webhook.mjs";
 
 const NOW=1793502000;
-const URL="https://vanschalkwykholdings.com/.netlify/functions/mixed-book-yoco-test-webhook";
+const NEW_WEBHOOK_URL="https://vanschalkwykholdings.com/.netlify/functions/mixed-book-yoco-test-webhook";
 const oldPreview="https://deploy-preview-2--van-schalkwyk-holdings.netlify.app/.netlify/functions/yoco-books-webhook";
 const secret="whsec_"+crypto.randomBytes(32).toString("base64");
 const env={
@@ -45,7 +45,7 @@ function signedOldEvent({kind="payment.succeeded",metadata={
   const digest=crypto.createHmac("sha256",
     Buffer.from(secret.slice(6),"base64"))
     .update(id+"."+NOW+"."+body).digest("base64");
-  return new Request(URL,{method:"POST",headers:{
+  return new Request(NEW_WEBHOOK_URL,{method:"POST",headers:{
     "webhook-id":id,
     "webhook-timestamp":String(NOW),
     "webhook-signature":"v1,"+(signatureValid?digest:crypto.randomBytes(32).toString("base64"))
