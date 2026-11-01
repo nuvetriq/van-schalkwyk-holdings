@@ -110,6 +110,8 @@ jobs:
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
         run: node --test scripts/test-mixed-book-real-email-worker.mjs
+      - name: Verify operator-only email queue review is read-only, redacted and default disabled
+        run: node --test scripts/test-mixed-book-email-operator-review.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
