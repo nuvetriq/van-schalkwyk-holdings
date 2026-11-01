@@ -32,10 +32,10 @@ const largeManifest={
 const hash=b=>crypto.createHash("sha256").update(b).digest("hex");
 function makeTest({business="grannys",pdfPath=largeKey,
   productId=grBook,status="paid",mode="live",revokedAt=null,
-  expiryHours=48,blobBytes=null}={}){
+  expiryHours=48,issuedAt=now,blobBytes=null}={}){
   const {token,grant}=issueBookDownloadGrant({
     orderId,business,productId,paymentStatus:"paid",
-    processingMode:"live",issuedAt:now,hours:expiryHours
+    processingMode:"live",issuedAt,hours:expiryHours
   });
   grant.revokedAt=revokedAt;
   const order={
@@ -136,7 +136,7 @@ test("Small CleverCubs PDF can be read from the private manifest store without g
 });
 test("Invalid, expired, revoked, refunded, test-only and cross-brand access never reads private PDF",async()=>{
   const fixtures=[
-    {expiryHours:1},
+    {expiryHours:1,issuedAt:new Date("2026-11-01T12:00:00Z")},
     {revokedAt:now.toISOString()},
     {status:"refunded"},
     {mode:"test"},
