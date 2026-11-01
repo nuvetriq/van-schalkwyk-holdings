@@ -114,5 +114,5 @@ test("Chunked single-part manifests still require a stored SHA256 checksum",()=>
 test("Book filename sanitizer blocks header/control/path injection",()=>{
   assert.equal(safePrivatePdfFileName("../pwn\\file.pdf"),".._pwn_file.pdf");
   assert.equal(safePrivatePdfFileName("Not a book"),"Purchased-book.pdf");
-  assert.equal(safePrivatePdfFileName("Book\\r\\nX-Test:1.pdf"),"Book__X-Test_1.pdf");
+  assert.equal(safePrivatePdfFileName("Book\r\nX-Test:1.pdf"),"Book__X-Test_1.pdf");
 });
