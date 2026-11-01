@@ -23,7 +23,7 @@ function requireSale(job,sale) {
      job.brandOrderRef!==sale.brandOrderRef ||
      !["customer-delivery","merchant-sale-notice"].includes(job.type) ||
      job.id!==job.masterOrderId+":"+job.business+":"+job.type ||
-     job.status!=="claimed" && job.status!=="pending" ||
+     job.status!=="claimed" ||
      !Array.isArray(sale.items) || !sale.items.length ||
      !Number.isSafeInteger(sale.subtotalCents) ||
      sale.subtotalCents<100 || job.amountCents!==sale.subtotalCents ||
