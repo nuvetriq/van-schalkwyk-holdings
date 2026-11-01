@@ -62,7 +62,7 @@ function mockPool(){
             const order=tx.orders[args[0]];
             return{rows:order?[clone(order)]:[]};
           }
-          if(sql.includes("UPDATE vsh_mixed_orders")&&sql.includes("status='awaiting_payment'")){
+          if(sql.includes("UPDATE vsh_mixed_orders")&&sql.includes("SET checkout_id=")){
             const [id,cid]=args;
             const order=tx.orders[id];
             if(!order||order.status!=="checkout_pending"||order.checkout_id)return{rows:[]};
