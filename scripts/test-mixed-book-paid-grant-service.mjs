@@ -178,5 +178,8 @@ test("Draft SQL enforces unique recoverable grant nonces without auto-migration"
  assert.match(sql,/CHECK \(token_hash ~ '\^\[a-f0-9\]\{64\}\$'\)/);
  assert.match(sql,/DRAFT ONLY/);
  const release=await readFile("scripts/test-mixed-book-release-gates.mjs","utf8");
- assert.ok(release.includes('netlify/database/migrations'));
+ assert.ok(release.includes('requireApprovedPreviewMigration'));
+ const preview=await readFile('scripts/preview-only-migration-guard.mjs','utf8');
+ assert.ok(preview.includes('netlify/database/migrations'));
+ assert.ok(preview.includes('release/preview-mixed-book-schema-20261102'));
 });
