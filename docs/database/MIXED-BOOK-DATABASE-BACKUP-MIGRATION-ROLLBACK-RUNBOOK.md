@@ -9,7 +9,7 @@ Scope: existing Netlify project for `vanschalkwykholdings.com`; existing site-wi
 - The UNAPPLIED draft schema is at `docs/database/mixed-book-orders-DRAFT.sql`, **not** in `netlify/database/migrations`. The GitHub tests use a disposable PostgreSQL 16 container.
 - The draft creates **six new, prefixed tables only**: `vsh_mixed_orders`, `vsh_mixed_order_lines`, `vsh_mixed_brand_sales`, `vsh_mixed_payment_events`, `vsh_mixed_email_outbox`, and `vsh_mixed_download_grants`. Existing products, customers, legacy Blob orders and private PDF objects are outside the DDL.
 - SQL begins with `BEGIN` and ends with `COMMIT`; it includes unique payment/event identifiers, per-brand foreign keys, indexed email retries and grant expiry, and unique per-book hashed grants plus UUID token nonce. It **does not contain DROP, ALTER, TRUNCATE, DELETE or UPDATE**. This makes it additive but does not by itself prove the production migration will succeed.
-- Live Netlify **UI screenshots** were reviewed after the initial runbook draft (see dated snapshot below). The actual backup inventory, a recoverable pre-migration backup, all database schemas, current cost forecast and old Yoco webhook health have **not** been independently verified.
+- Live Netlify **UI screenshots** were reviewed on 1 and 2 November 2026 (see dated snapshots below). A **dated scheduled backup is now visible** in the Netlify UI, but successful restoration, a backup identifier, other DB schemas, cost forecast, and the old Yoco webhook's current health have **not** been independently verified.
 
 ## Owner-verified Netlify UI snapshot — 1 November 2026
 
@@ -17,10 +17,18 @@ The owner supplied screenshots of the **existing** `vanschalkwykholdings.com` Ne
 
 - **Production branch:** created 1 November 2026, showed `Idle` with sleep after 5 minutes and was later opened in the built-in Netlify data explorer. It showed **`0 tables in public schema`**. This rules out collisions with our six proposed `public.vsh_mixed_*` tables **at the moment shown**; it does not prove absence of objects in other schemas or guarantee a future migration will succeed.
 - **Project database:** screenshot showed one branch of 100 available; around 141.9 KB total storage; last activity approximately four hours before the screenshot. The read-only and read/write connection string fields were **masked**. No password was revealed, copied or used.
-- **Backup policy, not backup inventory:** Netlify's UI displayed daily scheduled backups **retained seven days** and on-publish backups associated with the **three most recent deploys**. **No specific dated restore point, backup ID, or restore capability was shown.** This is a blocking unknown, particularly because the branch was created that day. Never equate retention settings with an existing pre-migration backup.
+- **Backup policy (1 Nov snapshot):** Netlify's UI displayed daily scheduled backups **retained seven days** and on-publish backups associated with the **three most recent deploys**. That initial screenshot **did not show any dated backup**; the updated 2 November screenshot below now does. Do not confuse retention policy with successful restoration.
 - **Billing (dated snapshot):** NUVETRIQ Personal plan, USD 9/month, 1,000 credits/month shown. Credits available approximately **1,878.4**, and the current 16 October–15 November billing period showed **6.2 credits used** at the screenshot time. This is **not** a cost projection or promise that future database, deployments or PDF delivery will be free.
 - **Access control:** `Allow personal access tokens full access to the production database` was **unchecked**. Leave it unchecked. A controlled Netlify Functions deployment has separate database permissions; do not conflate these access modes.
-- **Current decision:** **NO-GO** until a dated suitable pre-migration recovery point is verified, schema compatibility and billable usage are reviewed again immediately before release, and the owner explicitly approves the exact production-changing step. Ordinary conversation acknowledgement is not release authorization.
+- **Decision at 1 November:** **NO-GO** because no dated backup was visible yet, other deployment safeguards were not verified, and owner authorization for production changes had not been given. The new screenshot below resolves the *visibility of a dated backup*, not the remaining release conditions.
+
+## New scheduled backup listed — owner screenshot, 2 November 2026
+
+- In the existing project's **Database → Backups** section, Netlify visibly lists a **Scheduled** backup dated **2 November 2026, 5:00 AM** and displays a **Restore** button for the entry. The screenshot does not show the display time zone or backup identifier.
+- **Evidence level:** The listed backup is a **dated pre-migration candidate**, since no production migration of the new schema has been performed. This is stronger evidence than the retention policy alone. It does **not** prove the backup's contents, that it can be successfully restored, that current restoration permissions are sufficient, or how later data would be affected.
+- **Safety decision:** **DO NOT click Restore** to test it; restoring can replace live data. Do not change the original scheduled backup, read/write DB connection credentials, Yoco registration or production code in response to this screenshot.
+- **Remaining gate:** On the actual release day, reconfirm an appropriately dated recovery point remains available and the owner's restore authority and consequences are understood; perform an approved read-only schema preflight and reassess current credits/costs. Then obtain **specific, separate owner approval** for any deployment, migration or Yoco TEST change.
+- **Current GO/NO-GO: NO-GO.** A listed backup and green CI do not authorize a production-changing release.
 
 ## Current Netlify behavior relevant to release
 
@@ -36,7 +44,8 @@ Before approving any migration, verify in the **existing** Netlify project UI:
 
 - [x] Owner screenshot confirms the existing site/domain and its production branch (only one branch was visible on 1 November 2026). Recheck immediately before release; this does not authorize any write.
 - [ ] NUVETRIQ team plan, credits and database compute/bandwidth settings were **viewed on 1 November 2026** (snapshot above); verify updated limits, costs and budget immediately before any production deploy.
-- [ ] Current production backup list shows a suitable dated restore point that predates this schema change, and the Team Owner knows how to restore. **Do not restore** just to check.
+- [x] Owner screenshot dated 2 November 2026 shows **Scheduled, 5:00 AM, Restore offered**; it predates our un-applied migration. Backup identifier, content and actual restoration were NOT checked.
+- [ ] Before release, reconfirm the backup is available, the Team Owner has restore authority, and the effect of restoring on newer data is understood. **Do not restore merely to check.**
 - [ ] Production data explorer showed **0 public-schema tables on 1 November 2026**. Before first application, refresh with an approved **read-only** `information_schema` check; if any expected table exists, STOP and reconcile schema rather than reapplying `CREATE TABLE`.
 - [ ] Current live website build/version, branch status, and the legacy Yoco TEST webhook to Deploy Preview 2 are recorded. No pending legacy TEST payment needs that handler during a future cutover.
 - [ ] Stop/rollback owner, preferred testing hour, communication channel, and acceptable downtime/credit budget are defined. Do not touch existing products or private PDF Blob namespaces.
