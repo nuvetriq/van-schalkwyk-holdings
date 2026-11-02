@@ -1,0 +1,142 @@
+name: Shared Digital Book Cart — Build & Tests
+
+on:
+  push:
+    branches:
+      - feature/shared-mixed-brand-cart
+      - feature/mixed-book-code-review-20261102
+      - release/preview-mixed-book-schema-20261102
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci_test
+          POSTGRES_PASSWORD: ci-local-only-not-a-real-secret
+          POSTGRES_DB: vsh_bookshop_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_test -d vsh_bookshop_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install build dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build public website
+        run: npm run build
+      - name: Test shared cart state, cross-shop markup, no payment
+        run: node --test scripts/test-shared-book-cart.mjs
+      - name: Test mixed-brand master checkout snapshot and isolated sales
+        run: node --test scripts/test-mixed-book-order.mjs
+      - name: Test post-payment brand email routing and no-send sandbox
+        run: node --test scripts/test-mixed-book-fulfilment-plan.mjs
+      - name: Verify secure per-book download token lifecycle and draft SQL schema
+        run: node --test scripts/test-mixed-book-download-grants.mjs
+      - name: Test atomic database ledger, rollback and duplicate events
+        run: node --test scripts/test-mixed-book-ledger.mjs
+      - name: Test brand-only email templates and safe outbox transitions
+        run: node --test scripts/test-mixed-book-email-outbox.mjs
+      - name: Verify bounded 2 GiB private PDF part planning and checksums
+        run: node --test scripts/test-mixed-book-private-pdf-parts.mjs
+      - name: Verify paid-only private PDF part reader
+        run: node --test scripts/test-mixed-book-paid-pdf-reader.mjs
+      - name: Test draft SQL in an ephemeral real PostgreSQL 16 database
+        run: |
+          docker run --rm --network host --mount type=bind,src="$PWD",dst=/workspace,readonly \
+            -e PGPASSWORD=ci-local-only-not-a-real-secret postgres:16-alpine \
+            psql --host=127.0.0.1 --username=ci_test --dbname=vsh_bookshop_ci \
+            --set=ON_ERROR_STOP=1 --file=/workspace/docs/database/mixed-book-orders-DRAFT.sql
+          docker run --rm --network host --mount type=bind,src="$PWD",dst=/workspace,readonly \
+            -e PGPASSWORD=ci-local-only-not-a-real-secret postgres:16-alpine \
+            psql --host=127.0.0.1 --username=ci_test --dbname=vsh_bookshop_ci \
+            --set=ON_ERROR_STOP=1 --file=/workspace/scripts/test-mixed-book-real-postgres.sql
+      - name: Verify Netlify Database runtime connection and private scoped reads
+        run: node --test scripts/test-mixed-book-db-adapters.mjs
+      - name: Exercise official Netlify Database client on ephemeral PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-db-service.mjs
+      - name: Verify signed Yoco Checkout webhooks and independent checkout reconciliation
+        run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
+      - name: Verify one Yoco TEST charge and safe checkout redirect
+        run: node --test scripts/test-mixed-book-yoco-test-checkout.mjs
+      - name: Verify signed TEST Yoco handoff cannot dispatch PDFs or emails
+        run: node --test scripts/test-mixed-book-yoco-test-payment-handoff.mjs
+      - name: Verify admin-only checkout route, real stored catalogue and durable Yoco binding
+        run: node --test scripts/test-mixed-book-yoco-test-endpoint.mjs
+      - name: Verify signed Yoco TEST webhook HTTP route and no-send guards
+        run: node --test scripts/test-mixed-book-yoco-test-webhook-http.mjs
+      - name: Verify signed Yoco TEST webhook end to end against real temporary PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-yoco-real-db-webhook.mjs
+      - name: Enforce previously approved database schema, disabled payments and no leaked secrets
+        run: node --test scripts/test-mixed-book-release-gates.mjs
+      - name: Protect legacy Yoco Deploy Preview 2 events from shared-order database
+        run: node --test scripts/test-mixed-book-legacy-webhook-isolation.mjs
+      - name: Verify restricted admin-only Yoco TEST order status without customer data
+        run: node --test scripts/test-mixed-book-yoco-test-order-status.mjs
+      - name: Verify existing admin PDF upload manifests and checkout agree
+        run: node --test scripts/test-mixed-book-upload-compatibility.mjs
+      - name: Verify paid-live private PDF parts, secret grants and disabled customer delivery
+        run: node --test scripts/test-mixed-book-paid-download-endpoint.mjs
+      - name: Test private customer download page, secure POST parts and bounded disk writes
+        run: node --test scripts/test-paid-book-browser-download.mjs
+      - name: Verify committed paid grant recovery, test rejection and brand isolation
+        run: node --test scripts/test-mixed-book-paid-grant-service.mjs
+      - name: Verify brand-only email dispatch can safely retry or quarantine unknown sends
+        run: node --test scripts/test-mixed-book-brand-email-dispatch.mjs
+      - name: Verify recoverable paid links against disposable real PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-paid-grants.mjs
+      - name: Verify secure brand SMTP sender and offline Nodemailer JSON transport
+        run: node --test scripts/test-mixed-book-gmail-smtp-draft.mjs
+      - name: Verify disabled email worker connects paid-live SQL reads to separate Gmail transports
+        run: node --test scripts/test-mixed-book-email-worker-draft.mjs
+      - name: Verify synthetic paid mixed order through SQL and simulated brand delivery
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-email-worker.mjs
+      - name: Verify operator-only email queue review is read-only, redacted and default disabled
+        run: node --test scripts/test-mixed-book-email-operator-review.mjs
+      - name: Verify operator read-only email preview against disposable PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-real-email-operator-review.mjs
+      - name: Audit add-only draft migration constraints in disposable PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-migration-readiness.mjs
+      - name: Keep Netlify owner evidence and dated backup approval as explicit NO-GO
+        run: node --test scripts/test-mixed-book-owner-release-evidence.mjs
+      - name: Verify first Yoco TEST release requires separate owner approvals and defaults OFF
+        run: node --test scripts/test-first-yoco-test-release-plan.mjs
+      - name: Check updated scripts
+        run: |
+          node --check assets/shared-book-cart-core.js
+          node --check assets/shared-book-cart.js
+          node --check assets/clever-cubs-shop.js
+      - name: Verify public bundle and private server separation
+        run: |
+          test -f dist/grannys-little-bakery.html
+          test -f dist/clever-cubs-learning.html
+          test -f dist/assets/shared-book-cart.js
+          test -f dist/assets/shared-book-cart-core.js
+          test -f dist/assets/shared-book-cart.css
+          test ! -e dist/netlify
+          test ! -e dist/scripts
