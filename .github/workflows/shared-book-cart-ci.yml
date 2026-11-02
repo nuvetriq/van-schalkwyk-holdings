@@ -122,6 +122,8 @@ jobs:
         run: node --test scripts/test-mixed-book-migration-readiness.mjs
       - name: Keep Netlify owner evidence and dated backup approval as explicit NO-GO
         run: node --test scripts/test-mixed-book-owner-release-evidence.mjs
+      - name: Verify first Yoco TEST release requires separate owner approvals and defaults OFF
+        run: node --test scripts/test-first-yoco-test-release-plan.mjs
       - name: Check updated scripts
         run: |
           node --check assets/shared-book-cart-core.js
