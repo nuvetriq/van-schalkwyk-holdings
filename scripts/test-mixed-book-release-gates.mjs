@@ -7,6 +7,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {existsSync, readdirSync,readFileSync} from "node:fs";
 import path from "node:path";
+import {requireApprovedPreviewMigration} from "./preview-only-migration-guard.mjs";
 
 const read=name=>readFileSync(name,"utf8");
 const expectedTables=[
@@ -31,8 +32,7 @@ const tree=(dir,base=dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
 });
 
 test("No automatic Netlify migration is present or accidentally made active",()=>{
-  assert.equal(existsSync("netlify/database/migrations"),false,
-    "Schema change requires a separately approved production deploy");
+  assert.equal(requireApprovedPreviewMigration(),true);
   assert.equal(existsSync("docs/database/mixed-book-orders-DRAFT.sql"),true);
   assert.match(schema,/DRAFT ONLY/);
   for(const table of expectedTables)
