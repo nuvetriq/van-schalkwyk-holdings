@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/shared-mixed-brand-cart
+      - release/preview-mixed-book-schema-20261102
   workflow_dispatch:
 
 permissions:
