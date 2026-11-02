@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {existsSync} from "node:fs";
 import {getDatabase} from "@netlify/database";
+import {requireApprovedPreviewMigration} from "./preview-only-migration-guard.mjs";
 
 const url=process.env.CI_DATABASE_URL;
 if(!url || !/^postgresql?:\/\/ci_test:/.test(url) ||
@@ -21,7 +22,7 @@ const tables=[
 
 test("Draft is additive only and cannot auto-run on a Netlify deploy",async()=>{
  const sql=await readFile("docs/database/mixed-book-orders-DRAFT.sql","utf8");
- assert.ok(!existsSync("netlify/database/migrations"));
+ assert.equal(requireApprovedPreviewMigration(),true);
  assert.match(sql,/^-- DRAFT ONLY\./);
  assert.match(sql,/^BEGIN;/m);
  assert.match(sql,/^COMMIT;/m);
