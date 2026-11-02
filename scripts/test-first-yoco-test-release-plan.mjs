@@ -5,6 +5,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {existsSync} from "node:fs";
 import {readFile} from "node:fs/promises";
+import {requireApprovedPreviewMigration} from "./preview-only-migration-guard.mjs";
 
 const plan=await readFile("docs/database/FIRST-YOCO-TEST-RELEASE-GO-NOGO-CHECKLIST.md","utf8");
 const evidence=JSON.parse(await readFile("docs/database/OWNER-NETLIFY-RELEASE-EVIDENCE.json","utf8"));
@@ -17,7 +18,7 @@ test("Release remains NO-GO with all production/merchant action authorizations f
  assert.ok(Object.values(evidence.approvals).every(x=>x===false));
  assert.match(plan,/Current release verdict: NO-GO/);
  assert.match(plan,/separate, explicit/);
- assert.equal(existsSync("netlify/database/migrations"),false);
+ assert.equal(requireApprovedPreviewMigration(),true);
  assert.equal(existsSync("docs/database/mixed-book-orders-DRAFT.sql"),true);
  assert.doesNotMatch(site,/^\s*VSH_(?:ENABLE_PAYMENTS|MIXED_YOCO_TEST_ENABLED|MIXED_BOOK_DB_ENABLED)\s*=/m);
 });
