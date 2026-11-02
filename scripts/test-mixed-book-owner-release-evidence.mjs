@@ -6,6 +6,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {existsSync} from "node:fs";
+import {requireApprovedPreviewMigration} from "./preview-only-migration-guard.mjs";
 
 const path="docs/database/OWNER-NETLIFY-RELEASE-EVIDENCE.json";
 const evidence=JSON.parse(await readFile(path,"utf8"));
@@ -37,8 +38,8 @@ test("Credit balance and public-schema screenshot cannot authorize deployment",(
   assert.equal(evidence.billing_snapshot.used_credits_current_period,6.2);
   assert.equal(evidence.billing_snapshot.future_usage_or_cost_verified,false);
   assert.deepEqual(Object.values(evidence.approvals),Array(6).fill(false));
-  assert.equal(existsSync("netlify/database/migrations"),false,
-    "A draft migration must never automatically run during deployment.");
+  assert.equal(requireApprovedPreviewMigration(),true);
+  assert.equal(evidence.approvals.production_schema_migration,false);
   assert.equal(existsSync("docs/database/mixed-book-orders-DRAFT.sql"),true);
 });
 test("Backup policy and dated restore-point evidence stay clearly distinct in runbook",async()=>{
