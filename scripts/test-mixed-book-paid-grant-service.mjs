@@ -171,15 +171,15 @@ test("Incorrect sale subtotal, missing key or unsafe brand fails closed",async()
  }));
  assert.equal(invalid.data.sql.length,0);
 });
-test("Draft SQL enforces unique recoverable grant nonces without auto-migration",async()=>{
+test("Approved schema preserves unique recoverable grant nonces",async()=>{
  const sql=await readFile("docs/database/mixed-book-orders-DRAFT.sql","utf8");
  assert.match(sql,/token_nonce uuid NOT NULL UNIQUE/);
  assert.match(sql,/UNIQUE\(order_id,business,product_id\)/);
  assert.match(sql,/CHECK \(token_hash ~ '\^\[a-f0-9\]\{64\}\$'\)/);
  assert.match(sql,/DRAFT ONLY/);
  const release=await readFile("scripts/test-mixed-book-release-gates.mjs","utf8");
- assert.ok(release.includes('requireApprovedPreviewMigration'));
- const preview=await readFile('scripts/preview-only-migration-guard.mjs','utf8');
- assert.ok(preview.includes('netlify/database/migrations'));
- assert.ok(preview.includes('release/preview-mixed-book-schema-20261102'));
+ assert.ok(release.includes('requireApprovedProductionSchemaBaseline'));
+ const baseline=await readFile('scripts/approved-production-schema-baseline.mjs','utf8');
+ assert.ok(baseline.includes('netlify/database/migrations'));
+ assert.ok(baseline.includes('Exactly one previously approved migration'));
 });

@@ -128,8 +128,8 @@ test("Never stores DB credentials or activates migration in public site bundle",
   assert.ok(!runtime.includes("postgres://"));
   assert.ok(!conf.includes("netlify/database/migrations"));
   const fs=await import("node:fs");
-  const {requireApprovedPreviewMigration}=await import("./preview-only-migration-guard.mjs");
-  assert.equal(requireApprovedPreviewMigration(),true);
+  const {requireApprovedProductionSchemaBaseline}=await import("./approved-production-schema-baseline.mjs");
+  assert.equal(requireApprovedProductionSchemaBaseline(),true);
 });
 
 test("Mixed-book database service exposes gated transactional and scoped operations",async()=>{
