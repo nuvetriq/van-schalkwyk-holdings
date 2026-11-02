@@ -1,5 +1,5 @@
 /* Release evidence is a dated human-readable screenshot summary, NOT a
- * Netlify DB API audit, backup verification or user authorization.
+ * Netlify DB API audit, successful restore verification or user authorization.
  * This test prevents green CI from being interpreted as release approval.
  */
 import {test} from "node:test";
@@ -9,17 +9,23 @@ import {existsSync} from "node:fs";
 
 const path="docs/database/OWNER-NETLIFY-RELEASE-EVIDENCE.json";
 const evidence=JSON.parse(await readFile(path,"utf8"));
-test("Screenshot-backed preflight remains NO-GO without an actual dated backup",()=>{
+test("Dated scheduled backup does not permit migration without restore-readiness and owner approval",()=>{
   assert.equal(evidence.status,"DRAFT_ONLY_NO_GO");
   assert.equal(evidence.release_gate,"NO_GO");
   assert.equal(evidence.project,"vanschalkwykholdings.com");
-  assert.equal(evidence.as_of,"2026-11-01");
+  assert.equal(evidence.as_of,"2026-11-02");
   assert.match(evidence.source,/screenshots/);
   assert.equal(evidence.production_database.public_schema_table_count_observed,0);
   assert.equal(evidence.production_database.custom_schemas_checked,false);
   assert.equal(evidence.backup.configured_scheduled_retention_days,7);
   assert.equal(evidence.backup.configured_on_publish_retained_deploys,3);
-  assert.equal(evidence.backup.dated_existing_backup_verified,false);
+  assert.equal(evidence.backup.dated_existing_backup_verified,true);
+  assert.equal(evidence.backup.pre_migration_candidate_listed,true);
+  assert.equal(evidence.backup.backup_type_observed,"Scheduled");
+  assert.equal(evidence.backup.backup_date_time_displayed,"2026-11-02 05:00 AM");
+  assert.equal(evidence.backup.backup_display_timezone,"not shown in screenshot");
+  assert.equal(evidence.backup.restore_button_observed,true);
+  assert.equal(evidence.backup.restoration_success_verified,false);
   assert.equal(evidence.backup.pre_migration_restore_point_verified,false);
   assert.equal(evidence.backup.dated_backup_id,null);
   assert.equal(evidence.backup.recovery_test_performed,false);
@@ -41,8 +47,9 @@ test("Backup policy and dated restore-point evidence stay clearly distinct in ru
   );
   assert.match(runbook,/(?:7|seven) days/i);
   assert.match(runbook,/three most recent deploys/i);
-  assert.match(runbook,/No specific dated restore point/i);
+  assert.match(runbook,/Scheduled.*5:00 AM/i);
   assert.match(runbook,/NO-GO/);
   assert.match(runbook,/not.*database connection or proof of restoration capability/i);
-  assert.doesNotMatch(runbook,/^[-*]\s*\[x\]\s*Current production backup list shows/m);
+  assert.match(runbook,/restoration were NOT checked/i);
+  assert.match(runbook,/DO NOT click Restore/i);
 });
