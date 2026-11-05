@@ -1,46 +1,50 @@
-# Van Schalkwyk Holdings — production-code release safety checklist
-**Prepared:** 5 November 2026. **Decision: NO-GO for production code or payment activation.**
-**Scope:** Read-only review and documentation of draft PR #7. This document is **not** permission to merge/deploy, alter Netlify settings, edit or remove product records, change a Yoco webhook, initiate a charge, send customer email, or grant private PDF access.
+# Pre-launch main-site release plan — PR #7
+**Prepared:** 5 November 2026. **Status: READY FOR OWNER'S PRE-RELEASE CONFIGURATION CHECK, NOT APPROVED TO MERGE.**
 
-## 1. Verified baseline (read-only)
-- Repo: `nuvetriq/van-schalkwyk-holdings`; existing site `vanschalkwykholdings.com`. Continue using the **single** existing Netlify site, not a duplicate.
-- Production `main`: `694a8259743ef4d2c3f8af2bc578e86944ed418d`. Owner screenshot on 2 Nov 2026 shows production deploy published, migrations applied.
-- The already-approved PR #6 added exactly six `vsh_mixed_*` PostgreSQL tables; the production database browser showed all six with zero records on 2 Nov. Reconfirm before any release, because screenshots are historical evidence.
-- Draft PR #7: `feature/mixed-book-code-review-20261102`. Reviewed head before this documentation commit: `ff812c5e4c7b8943152865109c6c9761d8803a02`. Remains **draft, unmerged**. Its application code does not change existing Netlify DB migration files compared with `main`.
-- Latest reviewed CI run [42004082882](https://github.com/nuvetriq/van-schalkwyk-holdings/actions/runs/42004082882) **passed** on `ff812c5`; review any subsequent commit's new CI results before releasing.
-- Owner manually verified in Deploy Preview #7: Granny's and CleverCubs books share one basket; per-brand subtotals and combined totals update; removing books reduces total to zero; public Yoco button is disabled.
-- The six-table **Preview #7 PostgreSQL** branch is separate from production. This isolation **does not imply Netlify Blobs isolation**.
+## 1. Owner's updated operating decision
+The owner confirmed on 5 November 2026 that the existing **main website** `vanschalkwykholdings.com` is **not yet launched to customers** and may be used as the day-to-day development/testing site. There is **no request for a separate Netlify site**. Later, before opening to paying customers, introduce a deliberately isolated staging environment and stop test-product writes reaching the live catalogue.
 
-## 2. Critical blocker: preview writes affect site-wide Netlify Blobs
-**STOP before further preview admin uploads, publishes, edits, or deletes.**
-- Code `netlify/lib/catalogue-store.mjs` calls `getStore()`, *not* `getDeployStore()`. Netlify documents `getStore()` as site-scoped, shared across production and previews: https://docs.netlify.com/build/data-and-storage/netlify-blobs/ and https://www.netlify.com/knowledge-base/why-your-deploy-preview-can-delete-netlify-blobs-data/ .
-- `netlify/functions/admin-products.mjs` writes `vsh-products` through that helper; `product-image.mjs`, `recipe-pdf.mjs`, and `book-upload.mjs` also write site-wide Blobs. A preview admin operation can therefore affect live listings or private upload storage despite the separate PostgreSQL branch.
-- The CleverCubs product **TEST (R70)** was visible to the owner in Preview #7. Whether it is also published on production is **unverified**. Owner should inspect the **public live CleverCubs catalogue only** (no editor action). Do not assume the synthetic product is isolated or remove it without explicit approval.
-- Before a controlled production release, design and test a solution that protects site-wide Blobs from preview **writes** (e.g. restrict state-changing admin/upload routes by deploy context, or explicitly isolate preview stores with careful handling of read-only production catalogue tests). Confirm reading existing real products still works. Review cleanup/function side effects and prevent accidental production alterations.
-- A test product must not be treated as a real sale item; plan owner-approved cleanup only after identifying the exact record and evaluating its links.
+Owner also explicitly accepted keeping the existing CleverCubs product **TEST, R70**, which was visibly present in the **live** CleverCubs catalogue on 5 November. Do not edit/delete it as part of this release.
 
-## 3. Preflight checklist — all blocking until independently verified
-- [ ] Verify the owner-reviewed PR #7 head SHA, latest successful CI tests, preview result, and complete code diff. Confirm PR #5 remains untouched and PR #7 is still draft; no extra migration SQL files or edits.
-- [ ] Fix/mitigate preview-to-production Blob writes, then verify safeguards with preview-only tests. Confirm whether `TEST` is on live CleverCubs and obtain explicit approval for any change to it.
-- [ ] Owner inspect Netlify environment-variable **names, contexts, and whether values exist**, without sharing secret values or screenshots revealing them. Confirm production and preview scopes; verify `VSH_ENABLE_PAYMENTS`, `VSH_MIXED_BOOK_DB_ENABLED`, `VSH_MIXED_YOCO_TEST_ENABLED`, `VSH_MIXED_BOOK_EMAIL_ENABLED`, `VSH_MIXED_BOOK_DOWNLOADS_ENABLED`, and any operator-send triggers are OFF or absent for the first code release.
-- [ ] Verify production build's existing admin, uploads, public Granny's/CleverCubs catalogues and Vian still behave normally; use read-only checks first. No TEST payment endpoint needs to be activated to do this.
-- [ ] Recheck Netlify's currently available dated production **database backup** and recovery owner before release. The 2 Nov 2026 5:00 AM scheduled backup was observed but **not restored/tested**. Never click Restore merely to check; know that restoring a deploy does not restore Postgres or Netlify Blobs.
-- [ ] Confirm active credits, current preview branches, deployment auto-publish from `main`, and planned rollback owner. Do not enable new paid services or another Netlify project.
-- [ ] Verify that production `main` contains exactly the approved migration file and that its six tables and existing data are intact. Netlify applies migrations as part of publish: https://docs.netlify.com/build/data-and-storage/netlify-database/migrations/ .
-- [ ] Document initial customer-facing checkout state: the shared-cart button remains **disabled**; there is no live customer checkout yet. Existing admin-only Yoco TEST functions are production-origin/context locked and require explicit feature flags and TEST credentials.
-- [ ] Record the correct test plan and separate approvals for merchant actions. Older Yoco TEST webhook inventory reportedly pointed to **Deploy Preview #2**, but this is historical/unverified: use an owner-run **read-only Yoco TEST GET inventory** when authorized. Do not create, overwrite or remove subscriptions merely to inspect.
-- [ ] Confirm no automatic customer email worker is deployed/triggered and no PDF grant/download mechanism is activated; ensure multi-brand emails are tested only offline/synthetically.
-- [ ] Owner gives **separate, specific approval** for the exact production code commit and deployment after blockers are cleared; no `ok` or preview approval counts as production authorization.
+**This acceptance changes the previous preview-Blob-isolation blocker into a documented, temporary pre-launch risk, not a blocker for a disabled code-only release.** It does NOT waive payment, email, PDF, secrets or destructive-migration precautions.
 
-## 4. Release stages — approvals are independent
-1. **A: Review-only (current):** GitHub audit, checklist, isolated preview of static/client flows and disposable DB. Never write to site-wide Blob stores in preview.
-2. **B: Disabled production code release (future; separate explicit approval):** After all blockers, deploy the exact reviewed commit to the existing site with Yoco TEST/LIVE, customer emails and PDF delivery disabled; verify no regression and previous schema unchanged. Netlify currently auto-publishes merges to `main`.
-3. **C: Controlled Yoco TEST (future; another explicit approval):** Reconcile current TEST webhook via read-only inventory; separately authorize any registration/deletion, configuration flags and one bounded synthetic test transaction. Verify signed event, matching stored TEST order, correct ZAR cents and duplicate handling, **zero emails**, **zero PDF grants**, **zero LIVE charges**.
-4. **D: Customer delivery and LIVE checkout (later separate reviews):** Verify secure PDF grants, two brand-specific sender emails and owner receipts on a mixed-brand order, refunds/revocation, errors and retries; require independent authorization before any public launch.
+## 2. Confirmed scope
+- Release candidate: [Draft PR #7](https://github.com/nuvetriq/van-schalkwyk-holdings/pull/7), `feature/mixed-book-code-review-20261102` targeting existing `main`.
+- Approved PR #6 has **already created all six `vsh_mixed_*` tables in production**; no additional schema changes in PR #7 compared with `main`.
+- Shared Granny's and CleverCubs digital-book basket: owner verified adding from both brands, grouped subtotals, combined total and removal to zero on Preview #7.
+- Granny's replacement hero image and responsive no-beige-gap styling included in PR #7.
+- Existing admin, brand websites, Netlify Blobs and uploaded private PDFs must be preserved.
+- First production release is **CODE ONLY**: disabled public checkout, disabled Yoco TEST and LIVE payment flows, disabled branded email worker and disabled paid customer PDF delivery.
+- Yoco TEST checkout/webhook code in PR #7 has explicit flags, production-origin checks and signing/authentication requirements. However, the first release **must not enable its flags or register a merchant webhook**.
+- Existing code still deploys function files even when guarded. Endpoint availability on a URL is not permission to use it or evidence that payment is enabled.
 
-## 5. Stop/rollback rules
-- Stop on: accidental preview Blob writes, unexpected published TEST listing, mismatch between checked SHA and deploy SHA, new database migration, unsupported recovery/backup status, unintended activated env flag, non-TEST Yoco key, stale webhook, customer email, PDF grant, or unknown transaction.
-- For a code-only release, reverting Netlify code may restore code behavior but **does not reverse database migrations**, paid events, Yoco webhook registrations, or Blob writes. Do not assume `Restore` is a safe fix. Preserve immutable evidence and seek owner approval before any rollback that mutates data or merchant state.
-- Never send Netlify access tokens, Yoco keys, Gmail app passwords, private PDF links or personal customer details through chat or GitHub.
+## 3. Verified evidence (read-only)
+- Current `main` base recorded as `694a8259743ef4d2c3f8af2bc578e86944ed418d` (prior approved PR #6 migration).
+- Latest CI run before updating this document: [42006716099](https://github.com/nuvetriq/van-schalkwyk-holdings/actions/runs/42006716099), successful for `a8343e0ebe0991ee118014d7175482eb3b527245`. Recheck the **final** PR SHA and CI again immediately before any merge.
+- PR #7 was draft and unmerged during preparation.
+- Production PostgreSQL tables and isolated preview DB were confirmed earlier by owner screenshots. **Netlify Blobs are site-shared through `getStore()`**; the observed TEST product appearing on live site confirms the practical visibility. This is **accepted only while pre-launch**.
+- Historical pre-migration scheduled backup (2 November 2026 at 5 AM) has NOT been restore-tested. No restore has been requested.
+- No independent verification yet of Netlify's **current** environment-variable values or deploy contexts, Yoco TEST webhook inventory, Gmail credential scopes, or customer-facing external launch state.
 
-**Release verdict as of 5 Nov 2026: NO-GO.** This file is documentation only on the draft preview branch; no owner-approved production change has occurred.
+## 4. Release-blocking checks before merging
+- [ ] Confirm `main` and PR #7 head have not drifted, the final diff is intended, and CI is green for that **exact** commit. Verify existing product admin, Granny's and CleverCubs, Vian, book uploads and public catalogues on the candidate.
+- [ ] Confirm the live domain is still pre-launch; the owner has explicitly accepted retaining **TEST** book and shared Blob storage until a later isolation project.
+- [ ] Owner inspects **Netlify environment variable names and deploy contexts** without exposing any value. On **production**, the values `VSH_ENABLE_PAYMENTS`, `VSH_MIXED_YOCO_TEST_ENABLED`, `VSH_MIXED_BOOK_EMAIL_ENABLED`, `VSH_MIXED_BOOK_DOWNLOADS_ENABLED` must each be **absent or not "true"**. Also inspect `VSH_MIXED_BOOK_DB_ENABLED`; for the first disabled release, keep it **absent or not "true"** as an extra safeguard. Review other enabled legacy payment handlers separately.
+- [ ] Verify no deployed HTTP handler or scheduled function dispatches the new branded email worker or issues new paid download grants. CI checks part of this statically; production settings still need review.
+- [ ] Verify the last scheduled production DB backup date and who can restore it. Do not click Restore; code deploy rollback cannot undo DB, Blob or Yoco mutations.
+- [ ] Confirm enough Netlify credits and no unintended new site or subscription. The existing Netlify site auto-publishes `main`, so merging is itself a production deployment.
+- [ ] Request **explicit separate approval** for merging PR #7 / deploying the exact reviewed SHA to production with all payment/email/download features disabled.
+- [ ] Immediately after authorized deployment, check Netlify production status, migration messages (no new schema), existing products, public checkout disabled, and no unexpected outgoing emails or payment events. Stop if unexpected.
+
+## 5. Steps requiring *new, separate* approvals later
+**Yoco TEST:** Review current TEST webhook registrations with an owner-approved read-only GET and inspect any old Preview #2 webhook subscription. Registering/deleting/replacing a webhook, enabling TEST-only flags and making a bounded synthetic test payment each require deliberate approval. Never infer live payment authorisation from testing the basket.
+
+**Customer emails and PDF fulfilment:** Test two independently branded customer emails and owner receipts plus private PDF downloads, revoked/expired links and retries only after separate review, with no exposure to real customers.
+
+**Public launch:** Introduce isolated preview storage to prevent preview admin uploads affecting production; remove/unpublish synthetic TEST records only with owner's approval; independently validate live payment, customer email and PDF delivery before public purchases.
+
+## 6. Immediate status and no-go triggers
+**Immediate action permitted:** GitHub-only preparation/review of PR #7 and owner-led read-only settings checks. No merge, no Yoco webhook mutation, no test charge, no activated mail or paid download.
+Stop if any payment/email/download feature flag is on, a live merchant key is unexpectedly used, production schema changes, backups/recovery are questionable, or the code SHA/test status changes without review.
+
+This document updates the earlier 5 November checklist's *temporary pre-launch Blob-isolation requirement*. All historical security observations are retained in Git history, and the future staging-isolation requirement remains important once customers begin using the website.
