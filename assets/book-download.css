@@ -1,0 +1,20 @@
+:root{color-scheme:light;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#182541}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column}
+.top{padding:22px max(22px,calc((100% - 1050px)/2));background:#101f37;color:white;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:14px}
+.top a{color:white;text-decoration:none;font-weight:750;letter-spacing:.02em}
+.layout{display:grid;place-items:center;flex:1;padding:46px 20px}
+.panel{width:min(100%,660px);background:white;border:1px solid #e1e6ee;border-radius:20px;box-shadow:0 14px 40px #15274512;padding:clamp(28px,6vw,50px)}
+.eyebrow{color:#315fa4;font-size:12px;font-weight:750;letter-spacing:.14em;text-transform:uppercase}
+h1{font-size:clamp(27px,5vw,39px);line-height:1.16;letter-spacing:-.035em;margin:14px 0}
+p{line-height:1.65;color:#465670}
+#state{font-weight:700;color:#203b65;margin:25px 0 12px}
+.action{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px}
+button{cursor:pointer;border:0;border-radius:10px;padding:14px 23px;background:#1265bb;color:white;font-weight:700;font-size:15px}
+button:hover:not(:disabled){background:#07457f}
+button:disabled{background:#9aaabd;cursor:not-allowed}
+button#cancel{background:#edf1f7;color:#233951}
+progress{width:100%;height:15px;accent-color:#1265bb}
+.detail{font-size:14px;color:#315fa4;font-variant-numeric:tabular-nums}
+.help{font-size:13px;border-top:1px solid #e8ebf2;padding-top:12px}
+footer{text-align:center;color:#68758a;padding:28px 18px;font-size:12px}

@@ -1,0 +1,27 @@
+/* One shared book basket across Granny's and CleverCubs Learning.
+   Deliberately scoped to avoid modifying either storefront's own design. */
+.vsh-cart-launcher{position:fixed;right:20px;bottom:22px;z-index:510;border:2px solid #fff;border-radius:999px;background:#123a71;color:#fff;padding:13px 19px;font:800 14px system-ui,sans-serif;box-shadow:0 12px 36px #0b20476b;cursor:pointer}
+.vsh-cart-launcher:hover,.vsh-cart-launcher:focus-visible{background:#075d78}
+.vsh-cart-backdrop[hidden]{display:none!important}
+.vsh-cart-backdrop{position:fixed;inset:0;z-index:900;display:flex;justify-content:flex-end;background:rgba(7,22,39,.7);padding:0}
+.vsh-cart-dialog{display:flex;flex-direction:column;width:min(510px,100vw);height:100dvh;max-height:100dvh;overflow:auto;background:#fff;color:#243445;box-shadow:-20px 0 60px #0005;font:400 15px/1.5 system-ui,sans-serif}
+.vsh-cart-head{padding:22px 24px;border-bottom:1px solid #e3e8ee;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.vsh-cart-head h2{font:800 23px/1.2 system-ui,sans-serif;color:#11335c;margin:0}
+.vsh-cart-close{background:#eaf0f5;color:#11335c;font-size:26px;border:0;border-radius:50%;width:40px;height:40px;cursor:pointer;flex-shrink:0}
+.vsh-cart-lines{padding:18px 24px;flex:1;overflow:auto}
+.vsh-cart-empty{padding:28px 10px;text-align:center;color:#526375}
+.vsh-cart-brand{margin:0 0 24px}
+.vsh-cart-brand h3{font:800 17px system-ui,sans-serif;margin:0 0 12px;border-bottom:1px solid #e4e9ed;padding-bottom:8px;color:#11335c}
+.vsh-cart-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eef1f4}
+.vsh-cart-row strong{display:block;color:#193a55;font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.vsh-cart-row small{display:block;margin-top:5px;color:#577080;font-size:13px}
+.vsh-cart-remove{border:0;background:transparent;color:#b04a58;text-decoration:underline;cursor:pointer;padding:8px;flex-shrink:0}
+.vsh-cart-subtotal{text-align:right;color:#34495c;font-size:14px;font-weight:800;margin:12px 0}
+.vsh-cart-total{display:flex;justify-content:space-between;gap:12px;border-top:2px solid #dce5ed;padding:18px 24px;background:#f7fafc;font-size:16px}
+.vsh-cart-note{margin:0;padding:14px 24px;background:#fff8ea;color:#75531a;font-size:13px;line-height:1.6}
+.vsh-cart-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 24px 26px;background:#f7fafc}
+.vsh-cart-actions a{display:block;text-align:center;padding:12px 8px;border-radius:9px;background:#e5f3f5;color:#124963;font-size:13px;font-weight:800;text-decoration:none}
+.vsh-cart-checkout{grid-column:1/-1;padding:14px;border:0;border-radius:10px;font:800 14px system-ui,sans-serif;background:#dce3e7;color:#667883;cursor:not-allowed}
+body.vsh-cart-open{overflow:hidden}
+body.vsh-cart-open .vian-widget{visibility:hidden}
+@media(max-width:520px){.vsh-cart-launcher{right:12px;bottom:14px;padding:12px 15px}.vsh-cart-head,.vsh-cart-lines,.vsh-cart-note,.vsh-cart-actions{padding-left:16px;padding-right:16px}}

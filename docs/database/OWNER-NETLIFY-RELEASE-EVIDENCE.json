@@ -1,0 +1,51 @@
+{
+  "status": "DRAFT_ONLY_NO_GO",
+  "as_of": "2026-11-02",
+  "source": "Owner-provided Netlify UI screenshots dated 2026-11-01 and 2026-11-02 (not a database API inspection)",
+  "project": "vanschalkwykholdings.com",
+  "production_database": {
+    "branch_observed": "production",
+    "branch_created": "2026-11-01",
+    "public_schema_table_count_observed": 0,
+    "custom_schemas_checked": false,
+    "database_sleep_after_minutes": 5
+  },
+  "backup": {
+    "configured_scheduled_retention_days": 7,
+    "configured_on_publish_retained_deploys": 3,
+    "dated_existing_backup_verified": true,
+    "pre_migration_restore_point_verified": false,
+    "dated_backup_id": null,
+    "recovery_test_performed": false,
+    "backup_type_observed": "Scheduled",
+    "backup_date_time_displayed": "2026-11-02 05:00 AM",
+    "backup_display_timezone": "not shown in screenshot",
+    "restore_button_observed": true,
+    "pre_migration_candidate_listed": true,
+    "restoration_success_verified": false
+  },
+  "billing_snapshot": {
+    "team_plan": "Personal",
+    "monthly_plan_usd": 9,
+    "listed_monthly_credits": 1000,
+    "listed_available_credits": 1878.4,
+    "used_credits_current_period": 6.2,
+    "current_period": "2026-10-16 to 2026-11-15",
+    "future_usage_or_cost_verified": false
+  },
+  "approvals": {
+    "production_deployment": false,
+    "production_schema_migration": false,
+    "yoco_test_webhook_registration_or_change": false,
+    "yoco_test_payment_attempt": false,
+    "live_payments": false,
+    "customer_email_delivery": false
+  },
+  "release_gate": "NO_GO",
+  "blockers": [
+    "Confirm that the displayed November 2 scheduled backup remains available and is an appropriate recovery point immediately before migration; successful restore has not been tested",
+    "Recheck read-only production schema and available credits/ongoing charges at release time",
+    "Review isolated preview / production TEST context and existing Yoco webhook cutover",
+    "Obtain specific owner approval for each production-changing operation"
+  ]
+}
