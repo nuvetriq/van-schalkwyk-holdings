@@ -158,11 +158,18 @@
       $("test-checkout-amount").textContent =
         "Yoco TEST amount (server verified): " + money(data.amountCents) +
         (data.amountCents !== estimated ? " — NOTE: the catalogue amount changed." : "");
-      yoco.href = target;
-      yoco.hidden = false;
       check.disabled = false;
-      message("test-create-message",
-        "TEST checkout created. Confirm the amount before opening Yoco. Use TEST payment details only.");
+      if (data.amountCents !== estimated) {
+        // Product pricing changed after the catalogue loaded. Never redirect
+        // without a fresh, separately reviewed TEST amount confirmation.
+        message("test-create-message",
+          "STOP: The TEST amount differs from the catalogue estimate. Do not open Yoco or retry without review.", true);
+      } else {
+        yoco.href = target;
+        yoco.hidden = false;
+        message("test-create-message",
+          "TEST checkout created. Confirm the amount before opening Yoco. Use TEST payment details only.");
+      }
     } catch (error) {
       const disabled = error.status === 503 &&
         error.message === "Test-only checkout is disabled.";
