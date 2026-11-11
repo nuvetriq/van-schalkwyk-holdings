@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Admin TEST checkout | Van Schalkwyk Holdings</title>
+  <meta name="description" content="Private administrator-only Yoco TEST checkout verification workspace.">
+  <link rel="icon" href="assets/vs-transparent.svg">
+  <link rel="stylesheet" href="assets/admin.css">
+  <link rel="stylesheet" href="assets/admin-yoco-test.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="admin.html" aria-label="Back to Van Schalkwyk Holdings admin">
+      <img src="assets/vs-transparent.svg" alt="" width="43" height="43">
+      <span>VAN SCHALKWYK <strong>HOLDINGS</strong></span>
+    </a>
+    <a class="top-link" href="admin.html">← Back to admin dashboard</a>
+  </header>
+  <main class="wrap test-wrap">
+    <p class="eyebrow">PRIVATE ADMIN WORKSPACE · TEST MODE ONLY</p>
+    <h1>Yoco TEST checkout lab</h1>
+    <p class="test-lead">Prepare one controlled mixed-brand book checkout. This page does not activate live payments or public checkout.</p>
+    <div class="test-notice" role="note"><strong>TEST ONLY — not a customer checkout.</strong>
+      Your Yoco TEST and Netlify database switches must be separately approved and enabled for the server to create a checkout.
+      No branded emails or PDF downloads are sent from this TEST flow. Never use a live bank card.
+    </div>
+    <section id="no-admin" class="panel" hidden aria-live="polite">
+      <h2>Admin sign-in required</h2>
+      <p>Sign in to the existing admin dashboard first, then return here. No admin key is requested on this page.</p>
+      <a href="admin.html" class="button primary test-link">Go to admin sign-in</a>
+    </section>
+    <section id="test-workspace" hidden aria-label="TEST checkout preparation">
+      <form id="test-checkout-form" class="panel" novalidate>
+        <h2>1. Select one digital book from each brand</h2>
+        <p class="form-note">Only published books with an attached private PDF are eligible. Prices shown are estimates from your admin catalogue; the server independently checks prices and PDFs.</p>
+        <div class="test-grid">
+          <div>
+            <label for="test-grannys">Granny's recipe book</label>
+            <select id="test-grannys" name="grannys" required><option value="">Loading published books…</option></select>
+          </div>
+          <div>
+            <label for="test-clever">CleverCubs Learning book</label>
+            <select id="test-clever" name="clever-cubs" required><option value="">Loading published books…</option></select>
+          </div>
+        </div>
+        <div class="test-total">Catalogue estimate <strong id="test-estimate">—</strong></div>
+        <h2>2. Use example customer details</h2>
+        <div class="test-grid">
+          <div><label for="test-name">Test buyer name</label><input id="test-name" name="name" required minlength="2" maxlength="120" value="Test Buyer" autocomplete="off"></div>
+          <div><label for="test-email">Test email (no email is sent)</label><input id="test-email" name="email" required type="email" maxlength="254" value="test-buyer@example.com" autocomplete="off"></div>
+        </div>
+        <label class="test-confirm-label">
+          <input id="test-confirm" type="checkbox" required>
+          <span>I understand this creates a <strong>Yoco TEST</strong> order only, with no live charge, customer email, or PDF delivery.</span>
+        </label>
+        <button id="test-create" type="submit" class="button primary" disabled>Create ONE Yoco TEST checkout</button>
+        <p id="test-create-message" role="status" aria-live="polite" class="message"></p>
+      </form>
+      <section class="panel test-result" aria-labelledby="test-result-title">
+        <h2 id="test-result-title">3. Verify the TEST payment</h2>
+        <p class="form-note">A checkout URL is available only after the TEST order has been saved and bound to Yoco. Returning from Yoco is not proof of payment: verify the signed-webhook result below.</p>
+        <p id="test-order-ref" class="test-reference">No TEST order created in this tab.</p>
+        <p id="test-checkout-amount" class="test-reference"></p>
+        <a id="test-yoco-link" class="button primary test-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Open official Yoco TEST payment page</a>
+        <button id="test-check-status" class="button subtle" type="button" disabled>Check verified TEST order status</button>
+        <p id="test-status-message" class="message" role="status" aria-live="polite"></p>
+        <p class="form-note">Keep LIVE payments disabled. A TEST success should show server-verified status; it must never send emails or grant private PDF downloads.</p>
+      </section>
+    </section>
+  </main>
+  <script src="assets/admin-yoco-test.js" defer></script>
+</body>
+</html>
