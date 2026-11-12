@@ -7,6 +7,7 @@
  */
 import {snapshotMixedOrder} from "./mixed-book-order.mjs";
 import {requestMixedYocoTestCheckout} from "./mixed-book-yoco-test-checkout.mjs";
+import {CheckoutDiagnosticError,checkoutDiagnostic} from "./mixed-book-checkout-diagnostics.mjs";
 
 export async function createMixedBookTestCheckout(input,{
   catalogue,ledger,secretKey,postCheckout
@@ -16,25 +17,47 @@ export async function createMixedBookTestCheckout(input,{
     !ledger || typeof ledger.createPendingOrder!=="function" ||
     typeof ledger.bindYocoCheckout!=="function" ||
     typeof postCheckout!=="function")
-    throw Error("Test-only checkout dependencies are unavailable.");
+    throw checkoutDiagnostic("dependencies_invalid");
 
-  const {master}=await snapshotMixedOrder(input,catalogue);
-  const pending=await ledger.createPendingOrder(master,"test");
+  let master;
+  try {
+    ({master}=await snapshotMixedOrder(input,catalogue));
+  } catch {
+    throw checkoutDiagnostic("catalogue_snapshot_failed");
+  }
+  let pending;
+  try {
+    pending=await ledger.createPendingOrder(master,"test");
+  } catch {
+    throw checkoutDiagnostic("pending_order_write_failed");
+  }
   if(pending?.orderId!==master.id || pending.status!=="checkout_pending" ||
     pending.mode!=="test")
-    throw Error("Test checkout was not durably recorded.");
+    throw checkoutDiagnostic("pending_order_confirmation_invalid");
 
-  const checkout=await requestMixedYocoTestCheckout(master,{
-    enabled:true,secretKey,postCheckout
-  });
-  const bound=await ledger.bindYocoCheckout({
-    orderId:master.id,
-    checkoutId:checkout.checkoutId,
-    amountCents:master.amountCents,
-    processingMode:"test"
-  });
+  let checkout;
+  try {
+    checkout=await requestMixedYocoTestCheckout(master,{
+      enabled:true,secretKey,postCheckout
+    });
+  } catch(error) {
+    // Only carry forward our own allowlisted, secret-free codes.
+    if(error instanceof CheckoutDiagnosticError)throw error;
+    throw checkoutDiagnostic("yoco_request_unexpected");
+  }
+  let bound;
+  try {
+    bound=await ledger.bindYocoCheckout({
+      orderId:master.id,
+      checkoutId:checkout.checkoutId,
+      amountCents:master.amountCents,
+      processingMode:"test"
+    });
+  } catch {
+    throw checkoutDiagnostic("checkout_binding_failed");
+  }
   if(bound?.orderId!==master.id || bound.checkoutId!==checkout.checkoutId)
-    throw Error("Yoco test checkout was not bound to the pending order.");
+    throw checkoutDiagnostic("checkout_binding_confirmation_invalid");
   return {
     orderId:master.id,
     checkoutId:checkout.checkoutId,
@@ -56,26 +79,32 @@ export async function postYocoTestCheckout({
     !headers.Authorization.startsWith("Bearer sk_test_") ||
     typeof body!=="string" || Buffer.byteLength(body)>8192 ||
     typeof transport!=="function")
-    throw Error("Invalid Yoco TEST transport request.");
-  const res=await transport(url,{
-    method:"POST",
-    headers,
-    body,
-    signal:AbortSignal.timeout(12_000),
-    redirect:"error"
-  });
+    throw checkoutDiagnostic("yoco_transport_invalid");
+  let res;
+  try {
+    res=await transport(url,{
+      method:"POST",
+      headers,
+      body,
+      signal:AbortSignal.timeout(12_000),
+      redirect:"error"
+    });
+  } catch {
+    // Never log a fetch exception: some transports include request metadata.
+    throw checkoutDiagnostic("yoco_network_failed");
+  }
   if(!res || res.ok!==true)
-    throw Error("Yoco TEST checkout service is unavailable.");
+    throw checkoutDiagnostic("yoco_http_rejected",res?.status);
   const len=Number(res.headers?.get?.("content-length"));
   if(Number.isFinite(len) && len>32_768)
-    throw Error("Unexpected Yoco TEST response size.");
+    throw checkoutDiagnostic("yoco_response_too_large");
   // External data remains untrusted; validation happens before binding.
   const raw=await res.text();
   if(raw.length>32_768)
-    throw Error("Unexpected Yoco TEST response size.");
+    throw checkoutDiagnostic("yoco_response_too_large");
   let data;
   try {data=JSON.parse(raw);}catch{
-    throw Error("Invalid Yoco TEST checkout response.");
+    throw checkoutDiagnostic("yoco_response_json_invalid");
   }
   return {ok:true,data};
 }
