@@ -9,6 +9,7 @@
  * The checkoutId is minted BY Yoco, so it cannot be in initial metadata.
  */
 import {BRANDS,UUID} from "./mixed-book-order.mjs";
+import {checkoutDiagnostic} from "./mixed-book-checkout-diagnostics.mjs";
 
 const SITE="https://vanschalkwykholdings.com";
 const YOCO_API_URL="https://payments.yoco.com/api/checkouts";
@@ -57,27 +58,32 @@ export function buildMixedYocoTestCheckout(order){
 
 export function validateYocoTestCheckoutResponse(order,data){
   requireSnapshot(order);
+  // Report only fixed field groups. Never log Yoco's raw response or fields.
   if(!data || typeof data!=="object" || Array.isArray(data) ||
-    !CHECKOUT.test(data.id||"") ||
-    data.status!=="created" || data.amount!==order.amountCents ||
-    data.currency!=="ZAR" || data.processingMode!=="test" ||
-    (data.clientReferenceId!=null && data.clientReferenceId!==order.id) ||
+    !CHECKOUT.test(data.id||""))
+    throw checkoutDiagnostic("yoco_response_id_invalid");
+  if(data.status!=="created")
+    throw checkoutDiagnostic("yoco_response_status_invalid");
+  if(data.amount!==order.amountCents || data.currency!=="ZAR")
+    throw checkoutDiagnostic("yoco_response_amount_invalid");
+  if(data.processingMode!=="test")
+    throw checkoutDiagnostic("yoco_response_mode_invalid");
+  if((data.clientReferenceId!=null && data.clientReferenceId!==order.id) ||
     (data.externalId!=null && data.externalId!==order.id) ||
     (data.metadata?.orderId!=null && data.metadata.orderId!==order.id) ||
     (data.metadata?.purpose!=null && data.metadata.purpose!=="vsh-mixed-book-test"))
-    throw Error("Yoco TEST checkout response did not match the stored order.");
-  if(typeof data.redirectUrl!=="string")throw Error("Missing Yoco checkout redirect.");
+    throw checkoutDiagnostic("yoco_response_reference_invalid");
   let destination;
   try{destination=new URL(data.redirectUrl)}catch{
-    throw Error("Invalid Yoco checkout redirect.");
+    throw checkoutDiagnostic("yoco_response_redirect_invalid");
   }
-  if(destination.protocol!=="https:" ||
+  if(typeof data.redirectUrl!=="string" ||
+     destination.protocol!=="https:" ||
      destination.hostname!=="c.yoco.com" ||
      !destination.pathname.startsWith("/checkout/") ||
      destination.username || destination.password ||
      destination.port || destination.search || destination.hash)
-    throw Error("Unsafe Yoco checkout redirect.");
-  // Never copy untrusted provider JSON into a public order response.
+    throw checkoutDiagnostic("yoco_response_redirect_invalid");
   return {checkoutId:data.id,redirectUrl:destination.toString(),
     amountCents:order.amountCents,currency:"ZAR",processingMode:"test"};
 }
@@ -92,7 +98,7 @@ export async function requestMixedYocoTestCheckout(order,{
 }={}){
   if(enabled!==true || typeof secretKey!=="string" || !KEY.test(secretKey) ||
      typeof postCheckout!=="function")
-    throw Error("Yoco test checkout is disabled or unconfigured.");
+    throw checkoutDiagnostic("yoco_transport_invalid");
   const request=buildMixedYocoTestCheckout(order);
   const response=await postCheckout({
     url:request.url,
@@ -104,6 +110,6 @@ export async function requestMixedYocoTestCheckout(order,{
     body:JSON.stringify(request.payload)
   });
   if(!response || response.ok!==true || !response.data)
-    throw Error("Yoco TEST checkout could not be created.");
+    throw checkoutDiagnostic("yoco_request_unexpected");
   return validateYocoTestCheckoutResponse(order,response.data);
 }
