@@ -6,6 +6,7 @@ on:
       - feature/shared-mixed-brand-cart
       - feature/mixed-book-code-review-20261102
       - feature/admin-yoco-test-tool-20261111
+      - feature/yoco-test-checkout-diagnostics-20261112
       - release/preview-mixed-book-schema-20261102
   workflow_dispatch:
 
@@ -83,6 +84,13 @@ jobs:
         run: |
           node --check assets/admin-yoco-test.js
           node --test scripts/test-admin-yoco-test-ui.mjs
+      - name: Verify privacy-safe checkout diagnostics and provider response failures
+        run: |
+          node --check netlify/lib/mixed-book-checkout-diagnostics.mjs
+          node --check netlify/lib/mixed-book-yoco-test-operation.mjs
+          node --check netlify/lib/mixed-book-yoco-test-checkout.mjs
+          node --check netlify/functions/mixed-book-yoco-test-checkout.mjs
+          node --test scripts/test-yoco-test-checkout-diagnostics.mjs
       - name: Verify signed Yoco TEST webhook HTTP route and no-send guards
         run: node --test scripts/test-mixed-book-yoco-test-webhook-http.mjs
       - name: Verify signed Yoco TEST webhook end to end against real temporary PostgreSQL

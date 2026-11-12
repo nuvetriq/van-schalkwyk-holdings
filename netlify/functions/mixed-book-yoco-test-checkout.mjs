@@ -12,6 +12,7 @@ import {createMixedBookServices} from "../lib/mixed-book-db-service.mjs";
 import {
   createMixedBookTestCheckout,postYocoTestCheckout
 } from "../lib/mixed-book-yoco-test-operation.mjs";
+import {safeCheckoutDiagnostic} from "../lib/mixed-book-checkout-diagnostics.mjs";
 
 const SITE="https://vanschalkwykholdings.com";
 const noStore={"Cache-Control":"no-store","Referrer-Policy":"no-referrer"};
@@ -76,7 +77,14 @@ export function makeMixedBookTestCheckoutHandler({
     }catch(error){
       // Secret keys, private PDF paths, server SQL details or the customer
       // email must never appear in HTTP error responses.
-      console.error("Mixed Yoco TEST checkout unavailable",error?.name||"Error");
+      const diagnostic=safeCheckoutDiagnostic(error);
+      // Fixed, allowlisted codes only. Never emit error.message, stack,
+      // response bodies, request details, customer fields, or credentials.
+      if(diagnostic.httpStatus!==undefined)
+        console.error("Mixed Yoco TEST checkout diagnostic",diagnostic.code,
+          "http_status",diagnostic.httpStatus);
+      else
+        console.error("Mixed Yoco TEST checkout diagnostic",diagnostic.code);
       return respond({error:"The test checkout could not be prepared."},503);
     }
   };
