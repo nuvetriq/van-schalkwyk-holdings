@@ -55,7 +55,7 @@ test("Production build stays public-only without leaked customer PDF or SQL serv
     assert.doesNotMatch(content,/sk_(?:live|test)_[A-Za-z0-9_-]{15,}/);
     assert.doesNotMatch(content,/whsec_[A-Za-z0-9+/]{15,}/);
     assert.doesNotMatch(content,/vshlk_[A-Za-z0-9+/]{43}=/);
-    assert.doesNotMatch(content,/VSH_(?:GRANNYS|CLEVERCUBS)_SMTP_APP_PASSWORD/);
+    assert.doesNotMatch(content,/VSH_(?:GRANNYS|CLEVERCUBS)_(?:GMAIL|SMTP)_APP_PASSWORD/);
     assert.doesNotMatch(content,/nodemailer/);
 
     assert.doesNotMatch(content,/postgres(?:ql)?:\/\/[^ \n"'<>]+/i);
