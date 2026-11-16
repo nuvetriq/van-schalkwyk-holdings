@@ -37,7 +37,11 @@ test("Checkout requires two eligible private PDF books, example data, acknowledg
 });
 
 test("Only an official Yoco HTTPS TEST checkout is shown; payment is verified by read-only status",()=>{
-  assert.match(script,/url\.protocol !== "https:" \|\| url\.hostname !== "c\.yoco\.com"/);
+  assert.match(script,/url\.protocol !== "https:"/);
+  assert.match(script,/url\.hostname === "c\.yoco\.com"/);
+  assert.match(script,/url\.hostname === "pay\.yoco\.com"/);
+  assert.match(script,/url\.port \|\| url\.search \|\| url\.hash/);
+  assert.match(script,/url\.href !== value/);
   assert.match(script,/data\.processingMode !== "test" \|\| data\.paymentVerified !== false/);
   assert.match(script,/data\.currency !== "ZAR"/);
   assert.match(script,/status === "paid"/);
