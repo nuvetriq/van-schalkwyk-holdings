@@ -108,12 +108,19 @@
   }
 
   function safeYocoUrl(value) {
+    if (typeof value !== "string" || value.length > 2048 ||
+        !value.startsWith("https://")) return null;
     try {
       const url = new URL(value);
-      if (url.protocol !== "https:" || url.hostname !== "c.yoco.com" ||
-          !url.pathname.startsWith("/checkout/") || url.username || url.password)
-        return null;
-      return url.href;
+      if (url.protocol !== "https:" || url.username || url.password ||
+          url.port || url.search || url.hash || url.href !== value) return null;
+      const token = "[A-Za-z0-9_-]{5,150}";
+      const allowed = (url.hostname === "c.yoco.com" &&
+          new RegExp("^/checkout/" + token + "/?$").test(url.pathname)) ||
+        (url.hostname === "pay.yoco.com" &&
+          (new RegExp("^/r/" + token + "/?$").test(url.pathname) ||
+           new RegExp("^/ch_" + token + "/?$").test(url.pathname)));
+      return allowed ? url.href : null;
     } catch { return null; }
   }
 
