@@ -25,3 +25,14 @@
 body.vsh-cart-open{overflow:hidden}
 body.vsh-cart-open .vian-widget{visibility:hidden}
 @media(max-width:520px){.vsh-cart-launcher{right:12px;bottom:14px;padding:12px 15px}.vsh-cart-head,.vsh-cart-lines,.vsh-cart-note,.vsh-cart-actions{padding-left:16px;padding-right:16px}}
+
+/* Future LIVE buyer details form — remains absent until owner release. */
+.vsh-cart-buyer-form[hidden]{display:none!important}
+.vsh-cart-buyer-form{grid-column:1/-1;display:grid;gap:13px;margin-top:7px;padding:16px;border:1px solid #d5e3eb;border-radius:12px;background:#fff}
+.vsh-cart-buyer-label{display:grid;gap:6px;color:#163451;font-size:13px;font-weight:800}
+.vsh-cart-buyer-input{width:100%;min-width:0;box-sizing:border-box;border:1px solid #aabfcf;border-radius:8px;padding:11px 12px;color:#233a4b;background:#fff;font:400 15px system-ui,sans-serif}
+.vsh-cart-buyer-input:focus-visible{outline:3px solid #6cb3cd;outline-offset:2px}
+.vsh-cart-payment-hint{margin:0;color:#526375;font-size:12px;line-height:1.6}
+.vsh-cart-pay{border:0;border-radius:9px;background:#123a71;color:#fff;padding:14px;font:800 14px system-ui,sans-serif;cursor:pointer}
+.vsh-cart-pay:disabled{opacity:.65;cursor:wait}
+.vsh-cart-payment-status{margin:0;font-size:13px;line-height:1.5;color:#34495c}
