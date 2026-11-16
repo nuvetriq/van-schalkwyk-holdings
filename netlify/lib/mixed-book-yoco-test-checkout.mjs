@@ -13,8 +13,32 @@ import {checkoutDiagnostic} from "./mixed-book-checkout-diagnostics.mjs";
 
 const SITE="https://vanschalkwykholdings.com";
 const YOCO_API_URL="https://payments.yoco.com/api/checkouts";
-const CHECKOUT=/^checkout_[A-Za-z0-9_-]{5,150}$/;
+// These are the two checkout ID prefixes already accepted by the SQL ledger
+// and by the independently signed webhook verifier. Treat the suffix as opaque.
+const CHECKOUT=/^(?:checkout_|ch_)[A-Za-z0-9_-]{5,150}$/;
 const KEY=/^sk_test_[A-Za-z0-9_-]{8,}$/;
+
+/* Only two exact Yoco-owned HTTPS checkout hosts, never a parent-domain
+ * substring. The alternate pay.yoco.com paths are intentionally restricted
+ * to the known /r/<token> and /ch_<id> forms. No query strings or fragments.
+ * A URL is NOT evidence of payment: only a verified signed webhook can settle.
+ */
+export function safeYocoTestRedirectUrl(value){
+  if(typeof value!=="string" || value.length>2048 || !value.startsWith("https://"))
+    return null;
+  try{
+    const url=new URL(value);
+    if(url.protocol!=="https:" || url.username || url.password ||
+       url.port || url.search || url.hash || url.href!==value)return null;
+    const token="[A-Za-z0-9_-]{5,150}";
+    const allowed=(url.hostname==="c.yoco.com" &&
+        new RegExp("^/checkout/"+token+"/?$").test(url.pathname)) ||
+      (url.hostname==="pay.yoco.com" &&
+        (new RegExp("^/r/"+token+"/?$").test(url.pathname) ||
+         new RegExp("^/ch_"+token+"/?$").test(url.pathname)));
+    return allowed?url.href:null;
+  }catch{return null;}
+}
 
 function requireSnapshot(order){
   if(!order || !UUID.test(order.id||"") ||
@@ -73,18 +97,10 @@ export function validateYocoTestCheckoutResponse(order,data){
     (data.metadata?.orderId!=null && data.metadata.orderId!==order.id) ||
     (data.metadata?.purpose!=null && data.metadata.purpose!=="vsh-mixed-book-test"))
     throw checkoutDiagnostic("yoco_response_reference_invalid");
-  let destination;
-  try{destination=new URL(data.redirectUrl)}catch{
+  const destination=safeYocoTestRedirectUrl(data.redirectUrl);
+  if(!destination)
     throw checkoutDiagnostic("yoco_response_redirect_invalid");
-  }
-  if(typeof data.redirectUrl!=="string" ||
-     destination.protocol!=="https:" ||
-     destination.hostname!=="c.yoco.com" ||
-     !destination.pathname.startsWith("/checkout/") ||
-     destination.username || destination.password ||
-     destination.port || destination.search || destination.hash)
-    throw checkoutDiagnostic("yoco_response_redirect_invalid");
-  return {checkoutId:data.id,redirectUrl:destination.toString(),
+  return {checkoutId:data.id,redirectUrl:destination,
     amountCents:order.amountCents,currency:"ZAR",processingMode:"test"};
 }
 
