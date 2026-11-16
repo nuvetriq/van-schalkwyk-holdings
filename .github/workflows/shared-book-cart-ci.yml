@@ -7,6 +7,7 @@ on:
       - feature/mixed-book-code-review-20261102
       - feature/admin-yoco-test-tool-20261111
       - feature/yoco-test-checkout-diagnostics-20261112
+      - feature/live-yoco-server-foundation-20261116
       - release/preview-mixed-book-schema-20261102
   workflow_dispatch:
 
@@ -72,6 +73,12 @@ jobs:
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
         run: node --test scripts/test-mixed-book-real-db-service.mjs
+      - name: Verify disabled LIVE Yoco checkout foundation and signed payment safeguards
+        run: |
+          node --check netlify/lib/mixed-book-yoco-live-checkout.mjs
+          node --check netlify/lib/mixed-book-yoco-live-operation.mjs
+          node --check netlify/lib/mixed-book-yoco-live-payment-handoff.mjs
+          node --test scripts/test-mixed-book-yoco-live-foundation.mjs
       - name: Verify signed Yoco Checkout webhooks and independent checkout reconciliation
         run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
       - name: Verify one Yoco TEST charge and safe checkout redirect
