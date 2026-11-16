@@ -133,7 +133,7 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
   assert.match(deliveryScheduler,/VSH_MIXED_YOCO_LIVE_ENABLED/);
   assert.match(deliveryScheduler,/VSH_MIXED_YOCO_TEST_ENABLED/);
   assert.match(deliveryScheduler,/VSH_MIXED_BOOK_LINK_KEY/);
-  assert.match(deliveryScheduler,/context==="production"/);
+  assert.ok(deliveryScheduler.includes('context?.deploy?.context!=="production"'));
   assert.match(deliveryScheduler,/maxJobs:1/);
   assert.ok(deliveryScheduler.includes('schedule:"*/5 * * * *"'));
   assert.doesNotMatch(site,/VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED/);
