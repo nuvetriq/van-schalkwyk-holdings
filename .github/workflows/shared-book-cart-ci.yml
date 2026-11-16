@@ -130,6 +130,10 @@ jobs:
         run: node --test scripts/test-mixed-book-real-paid-grants.mjs
       - name: Verify secure brand SMTP sender and offline Nodemailer JSON transport
         run: node --test scripts/test-mixed-book-gmail-smtp-draft.mjs
+      - name: Verify safe bounded LIVE branded email batch remains untriggered
+        run: |
+          node --check netlify/lib/mixed-book-live-email-batch.mjs
+          node --test scripts/test-mixed-book-live-email-batch.mjs
       - name: Verify disabled email worker connects paid-live SQL reads to separate Gmail transports
         run: node --test scripts/test-mixed-book-email-worker-draft.mjs
       - name: Verify synthetic paid mixed order through SQL and simulated brand delivery
