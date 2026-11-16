@@ -30,7 +30,13 @@ export function createControlledMixedBookEmailBatch({
   if(enabled!==true || operatorApproved!==true ||
      context?.deploy?.context!=="production" ||
      !Number.isSafeInteger(maxJobs) || maxJobs<1 || maxJobs>4 ||
-     typeof workerFactory!=="function")refuse();
+     typeof workerFactory!=="function" ||
+     env?.VSH_MIXED_BOOK_DB_ENABLED!=="true" ||
+     env?.VSH_MIXED_BOOK_DOWNLOADS_ENABLED!=="true" ||
+     env?.VSH_MIXED_BOOK_EMAIL_ENABLED!=="true" ||
+     env?.VSH_MIXED_YOCO_LIVE_ENABLED!=="true" ||
+     env?.VSH_MIXED_YOCO_TEST_ENABLED==="true" ||
+     env?.VSH_ENABLE_PAYMENTS!=="true")refuse();
 
   // The worker performs a second fail-closed readiness check, including the
   // paid LIVE PostgreSQL outbox and both brand-specific Gmail identities.
