@@ -14,17 +14,23 @@ import {openMixedBookPool} from "./mixed-book-db-runtime.mjs";
 import {createMixedBookDbReads} from "./mixed-book-db-reads.mjs";
 import {createMixedBookGmailSender} from "./mixed-book-gmail-smtp-draft.mjs";
 import {dispatchOneMixedBrandEmail} from "./mixed-book-brand-email-dispatch-draft.mjs";
+import {BRAND_EMAILS} from "./mixed-book-order.mjs";
 
 const FLAGS=[
  "VSH_MIXED_BOOK_DB_ENABLED",
  "VSH_MIXED_BOOK_DOWNLOADS_ENABLED",
  "VSH_MIXED_BOOK_EMAIL_ENABLED",
+ "VSH_MIXED_YOCO_LIVE_ENABLED",
  "VSH_ENABLE_PAYMENTS"
 ];
-const SECRET_NAMES=[
- "VSH_GRANNYS_SMTP_APP_PASSWORD",
- "VSH_CLEVERCUBS_SMTP_APP_PASSWORD"
-];
+const CREDENTIALS=Object.freeze({
+ "grannys":Object.freeze({
+   user:"VSH_GRANNYS_GMAIL_USER",password:"VSH_GRANNYS_GMAIL_APP_PASSWORD"
+ }),
+ "clever-cubs":Object.freeze({
+   user:"VSH_CLEVERCUBS_GMAIL_USER",password:"VSH_CLEVERCUBS_GMAIL_APP_PASSWORD"
+ })
+});
 const secretFormat=/^vshlk_[A-Za-z0-9+/]{43}=$/;
 const stop=()=>{throw Error("Branded email worker is not enabled.");};
 
@@ -35,13 +41,17 @@ export function assertMixedBookEmailWorkerReadiness({
 }={}){
  if(enabled!==true || operatorApproved!==true ||
    context?.deploy?.context!=="production" ||
+   env.VSH_MIXED_YOCO_TEST_ENABLED==="true" ||
    !FLAGS.every(name=>env[name]==="true"))stop();
  const key=env.VSH_MIXED_BOOK_LINK_KEY;
  if(typeof key!=="string" || !secretFormat.test(key))stop();
  const bytes=Buffer.from(key.slice(6),"base64");
  if(bytes.length!==32 || bytes.toString("base64")!==key.slice(6))stop();
- for(const name of SECRET_NAMES){
-   const value=env[name];
+ for(const [business,keys] of Object.entries(CREDENTIALS)){
+   // Fail closed before opening the database or reserving an outbox job.
+   // A typo or cross-brand email configuration must never send private books.
+   if(env[keys.user]!==BRAND_EMAILS[business].sender)stop();
+   const value=env[keys.password];
    if(typeof value!=="string" || /[\r\n\t]/.test(value) ||
      !/^[A-Za-z0-9]{16}$/.test(value.trim().replaceAll(" ","")))stop();
  }
