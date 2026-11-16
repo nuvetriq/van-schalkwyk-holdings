@@ -41,6 +41,25 @@ export function createMixedBookDbReads(pool){
       );
       return result.rows?.[0] ?? null;
     },
+    // Yoco's documented payment webhook may identify a checkout without
+    // repeating merchant metadata.orderId. Resolve ONLY against our durable
+    // LIVE checkout binding. Never query by customer email or amount.
+    async loadYocoLiveOrderByCheckoutId(checkoutId){
+      if(typeof checkoutId!=="string" ||
+         !/^(?:ch_|checkout_)[A-Za-z0-9_-]{5,150}$/.test(checkoutId))
+        return null;
+      const result=await pool.query(
+        `SELECT id,checkout_id,amount_cents,processing_mode,status
+         FROM vsh_mixed_orders
+         WHERE checkout_id=$1 AND processing_mode='live'`,
+        [checkoutId]
+      );
+      // Checkout IDs must uniquely belong to one master order. Ambiguous
+      // database bindings should always fail closed, never settle a sale.
+      if(result.rows?.length>1)
+        throw Error("Ambiguous LIVE checkout binding.");
+      return result.rows?.[0] ?? null;
+    },
     async loadPaidBrandSale(orderId,business){
       if(typeof orderId!=="string" || !UUID.test(orderId) ||
          !BRANDS.includes(business))
