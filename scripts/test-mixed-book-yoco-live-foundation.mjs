@@ -184,12 +184,13 @@ const stored={
  status:"awaiting_payment",checkout_id:provider.id
 };
 function signedLiveEvent({mode="live",purpose="vsh-mixed-book-live",
- order=stored,checkoutId=provider.id,secret=signingSecret}={}){
+ order=stored,checkoutId=provider.id,secret=signingSecret,
+ noCustomOrderId=false}={}){
  const event={
   type:"payment.succeeded",
   payload:{id:"pay_ExampleLive123",status:"succeeded",
    amount:14500,currency:"ZAR",mode,
-   metadata:{orderId,checkoutId,purpose}}
+   metadata:{...(noCustomOrderId?{}:{orderId}),checkoutId,purpose}}
  };
  const rawBody=JSON.stringify(event),id="msg_ExampleLiveWebhook123";
  const mac=crypto.createHmac("sha256",Buffer.from(signingSecret.slice(6),"base64"))
@@ -202,6 +203,10 @@ function signedLiveEvent({mode="live",purpose="vsh-mixed-book-live",
    "webhook-signature":"v1,"+mac
   }),
   async loadStoredOrder(id){calls.push("lookup:"+id);return order},
+  async loadStoredOrderByCheckoutId(id){
+    calls.push("checkout-lookup:"+id);
+    return order && order.checkout_id===id ? order : null;
+  },
   async settleAfterVerifiedWebhook(id,confirmation){
    calls.push("settle:"+id);
    assert.equal(confirmation.signatureVerified,true);
@@ -218,6 +223,22 @@ test("A signed matching LIVE event can only prepare durable outbox records, neve
   brandCount:2,emailsSent:0,pdfsDelivered:0});
  assert.deepEqual(calls,["lookup:"+orderId,"settle:"+orderId]);
 });
+test("Signed LIVE event without merchant orderId resolves only the stored matching checkout",async()=>{
+ const {options,calls}=signedLiveEvent({noCustomOrderId:true});
+ const result=await prepareVerifiedMixedBookLiveSettlement(options);
+ assert.equal(result.liveVerified,true);
+ assert.deepEqual(calls,[
+  "checkout-lookup:"+provider.id,
+  "settle:"+orderId
+ ]);
+ const wrong=signedLiveEvent({
+  noCustomOrderId:true,checkoutId:"checkout_Unrelated98765"
+ });
+ const check=await prepareVerifiedMixedBookLiveSettlement(wrong.options);
+ assert.equal(check.retryable,true);
+ assert.ok(!wrong.calls.some(x=>x.startsWith("settle:")));
+});
+
 test("No unsigned, wrong-mode, unbound or unrelated event can settle LIVE orders",async()=>{
  for(const patch of [
   {secret:"whsec_"+crypto.randomBytes(32).toString("base64")},
