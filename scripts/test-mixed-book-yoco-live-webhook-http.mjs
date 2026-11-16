@@ -102,6 +102,25 @@ test("Yoco payment notification without custom orderId securely locates LIVE ord
     "db","checkout-lookup:"+checkoutId,"settle:"+orderId
   ]);
 });
+test("Documented Yoco webhook without custom orderId OR purpose uses only signed checkout binding",async()=>{
+  const {handler,calls}=app();
+  const response=await handler(signed({
+    orderRef:null,purpose:undefined
+  }),production);
+  assert.equal(response.status,200);
+  assert.deepEqual(calls,[
+    "db","checkout-lookup:"+checkoutId,"settle:"+orderId
+  ]);
+});
+test("Missing purpose and foreign checkout cannot settle another order",async()=>{
+  const {handler,calls}=app();
+  const response=await handler(signed({
+    orderRef:null,purpose:undefined,checkout:"checkout_Foreign987654"
+  }),production);
+  assert.equal(response.status,503);
+  assert.deepEqual(calls,["db","checkout-lookup:checkout_Foreign987654"]);
+});
+
 test("Unknown checkoutId-only signed event cannot settle a different customer's order",async()=>{
   const {handler,calls}=app();
   const response=await handler(signed({
