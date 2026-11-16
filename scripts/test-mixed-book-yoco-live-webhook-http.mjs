@@ -63,6 +63,10 @@ function app({
         async loadYocoLiveOrder(id){
           calls.push("lookup:"+id);return order;
         },
+        async loadYocoLiveOrderByCheckoutId(id){
+          calls.push("checkout-lookup:"+id);
+          return order && order.checkout_id===id ? order : null;
+        },
         async settleAfterVerifiedWebhook(id,confirmation){
           calls.push("settle:"+id);
           assert.equal(confirmation.signatureVerified,true);
@@ -87,6 +91,26 @@ test("A signed LIVE payment only settles known master and queues brand jobs; no 
   assert.equal(config.method,"POST");
   assert.equal(response.headers.get("cache-control"),"no-store");
 });
+test("Yoco payment notification without custom orderId securely locates LIVE order using signed checkoutId",async()=>{
+  const {handler,calls}=app();
+  const response=await handler(signed({orderRef:null}),production);
+  assert.equal(response.status,200);
+  assert.deepEqual(await response.json(),{
+    ok:true,verified:true,duplicate:false
+  });
+  assert.deepEqual(calls,[
+    "db","checkout-lookup:"+checkoutId,"settle:"+orderId
+  ]);
+});
+test("Unknown checkoutId-only signed event cannot settle a different customer's order",async()=>{
+  const {handler,calls}=app();
+  const response=await handler(signed({
+    orderRef:null,checkout:"checkout_Unrelated12345"
+  }),production);
+  assert.equal(response.status,503);
+  assert.deepEqual(calls,["db","checkout-lookup:checkout_Unrelated12345"]);
+});
+
 test("Duplicate LIVE payment leaves no new outbox tasks",async()=>{
   const {handler,calls}=app({
     order:{...master,status:"paid"},
