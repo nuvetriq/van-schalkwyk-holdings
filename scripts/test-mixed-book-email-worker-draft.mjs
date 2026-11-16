@@ -25,10 +25,14 @@ const env={
  VSH_MIXED_BOOK_DB_ENABLED:"true",
  VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"true",
  VSH_MIXED_BOOK_EMAIL_ENABLED:"true",
+ VSH_MIXED_YOCO_LIVE_ENABLED:"true",
+ VSH_MIXED_YOCO_TEST_ENABLED:"false",
  VSH_ENABLE_PAYMENTS:"true",
  VSH_MIXED_BOOK_LINK_KEY:secret,
- VSH_GRANNYS_SMTP_APP_PASSWORD:"a".repeat(16),
- VSH_CLEVERCUBS_SMTP_APP_PASSWORD:"b".repeat(16)
+ VSH_GRANNYS_GMAIL_USER:"grannyspopsandtreats@gmail.com",
+ VSH_GRANNYS_GMAIL_APP_PASSWORD:"a".repeat(16),
+ VSH_CLEVERCUBS_GMAIL_USER:"learningclevercubs@gmail.com",
+ VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:"b".repeat(16)
 };
 const biz={
  grannys:{product:grId,name:"Granny's",email:"grannyspopsandtreats@gmail.com",
@@ -136,8 +140,8 @@ test("All feature flags, both secrets, context and explicit approval required BE
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_DB_ENABLED:"false"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"false"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_LINK_KEY:"invalid"}},
-   {enabled:true,operatorApproved:true,environment:{...env,VSH_CLEVERCUBS_SMTP_APP_PASSWORD:""}},
-   {enabled:true,operatorApproved:true,environment:{...env,VSH_GRANNYS_SMTP_APP_PASSWORD:"injected\nheader"}}
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:""}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_GRANNYS_GMAIL_APP_PASSWORD:"injected\nheader"}}
  ];
  for(const variant of proposals){
    assert.throws(()=>createControlledMixedBookEmailWorker({
@@ -204,7 +208,7 @@ test("Worker never sends anything merely by importing it and has no public HTTP 
  assert.ok(!module.includes("schedule("));
  assert.ok(!module.includes("console.log"));
  assert.ok(!site.includes("VSH_MIXED_BOOK_EMAIL_ENABLED"));
- assert.ok(!site.includes("VSH_GRANNYS_SMTP_APP_PASSWORD"));
+ assert.ok(!site.includes("VSH_GRANNYS_GMAIL_APP_PASSWORD"));
  assert.equal(assertMixedBookEmailWorkerReadiness({
    enabled:true,operatorApproved:true,context:ctx,env
  }),true);
