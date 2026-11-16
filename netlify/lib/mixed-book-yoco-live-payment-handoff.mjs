@@ -27,7 +27,13 @@ export async function prepareVerifiedMixedBookLiveSettlement({
 
   let event;
   try {event=JSON.parse(rawBody)}catch{reject();}
-  if(event?.payload?.metadata?.purpose!=="vsh-mixed-book-live")
+  const purpose=event?.payload?.metadata?.purpose;
+  // An explicit foreign purpose is never a book order. An absent purpose
+  // is permitted only for the signed Yoco checkoutId-only notification,
+  // which is subsequently matched to a durable LIVE order in our DB.
+  if(purpose!==undefined && purpose!=="vsh-mixed-book-live")
+    return {ignored:true};
+  if(purpose===undefined && signed.checkoutCandidate===null)
     return {ignored:true};
   if(signed.processingMode!=="live")reject();
 
