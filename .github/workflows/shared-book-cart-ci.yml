@@ -79,6 +79,10 @@ jobs:
           node --check netlify/lib/mixed-book-yoco-live-operation.mjs
           node --check netlify/lib/mixed-book-yoco-live-payment-handoff.mjs
           node --test scripts/test-mixed-book-yoco-live-foundation.mjs
+      - name: Verify customer LIVE checkout HTTP remains disabled and origin-safe
+        run: |
+          node --check netlify/functions/mixed-book-yoco-live-checkout.mjs
+          node --test scripts/test-mixed-book-yoco-live-checkout-endpoint.mjs
       - name: Verify fail-closed LIVE Yoco webhook HTTP route and HMAC authentication
         run: |
           node --check netlify/functions/mixed-book-yoco-live-webhook.mjs
