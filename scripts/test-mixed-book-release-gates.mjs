@@ -128,6 +128,16 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
 
   }
 
+  const deliveryScheduler=read("netlify/functions/mixed-book-live-email-scheduler.mjs");
+  assert.match(deliveryScheduler,/VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_YOCO_LIVE_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_YOCO_TEST_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_BOOK_LINK_KEY/);
+  assert.match(deliveryScheduler,/context==="production"/);
+  assert.match(deliveryScheduler,/maxJobs:1/);
+  assert.match(deliveryScheduler,/schedule:"\\*\\/5 \\* \\* \\* \\*"/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED/);
+  assert.doesNotMatch(deliveryScheduler,/X-Admin-Key|Bearer sk_live/);
   assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
 });
 test("No checkout function added to public cart or Netlify config enables payments",()=>{
