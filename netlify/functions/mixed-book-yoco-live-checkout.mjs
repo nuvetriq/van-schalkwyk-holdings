@@ -11,11 +11,11 @@ import {createMixedBookCatalogueSource}
 import {createMixedBookServices} from "../lib/mixed-book-db-service.mjs";
 import {prepareMixedBookLiveCheckout}
   from "../lib/mixed-book-yoco-live-operation.mjs";
-import {postYocoLiveCheckout}
+import {postYocoLiveCheckout,verifyYocoLiveRedirect}
   from "../lib/mixed-book-yoco-live-checkout.mjs";
 import {safeCheckoutDiagnostic}
   from "../lib/mixed-book-checkout-diagnostics.mjs";
-import {BRAND_EMAILS}
+import {BRAND_EMAILS,UUID}
   from "../lib/mixed-book-order.mjs";
 
 const SITE="https://vanschalkwykholdings.com";
@@ -130,8 +130,10 @@ export function makeMixedBookYocoLiveCheckoutHandler({
       if(result?.paymentVerified!==false ||
          result.processingMode!=="live" ||
          result.currency!=="ZAR" ||
-         typeof result.redirectUrl!=="string" ||
-         !Number.isSafeInteger(result.amountCents))
+         !UUID.test(result.orderId||"") ||
+         !verifyYocoLiveRedirect(result.redirectUrl) ||
+         !Number.isSafeInteger(result.amountCents) ||
+         result.amountCents<100 || result.amountCents>5_000_000)
         throw Error("Unconfirmed server LIVE checkout result.");
       // Redirect is only payment initiation; webhook verification must
       // independently persist a PAID live order before delivery.
