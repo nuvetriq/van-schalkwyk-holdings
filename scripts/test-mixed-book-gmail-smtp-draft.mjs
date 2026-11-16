@@ -114,6 +114,8 @@ test("No credential or network access when feature is disabled",async()=>{
   {enabled:false,environment:env,deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_EMAIL_ENABLED:"false"},deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_DB_ENABLED:"false"},deploy:context},
+  {enabled:true,environment:{...env,VSH_MIXED_YOCO_LIVE_ENABLED:"false"},deploy:context},
+  {enabled:true,environment:{...env,VSH_MIXED_YOCO_TEST_ENABLED:"true"},deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"false"},deploy:context},
   {enabled:true,environment:{...env,VSH_ENABLE_PAYMENTS:"false"},deploy:context},
   {enabled:true,environment:env,deploy:{deploy:{context:"deploy-preview"}}},
@@ -134,6 +136,23 @@ test("Missing, weak or newline-injected brand passwords are denied before SMTP",
    assert.deepEqual(f.calls,[]);
  }
 });
+test("Brand Gmail identity mismatch never creates SMTP transport",async()=>{
+ for(const emailSettings of [
+  {...env,VSH_GRANNYS_GMAIL_USER:"learningclevercubs@gmail.com"},
+  {...env,VSH_CLEVERCUBS_GMAIL_USER:"grannyspopsandtreats@gmail.com"},
+  {...env,VSH_GRANNYS_GMAIL_USER:""},
+  {...env,VSH_CLEVERCUBS_GMAIL_USER:""}
+ ]){
+   for(const business of ["grannys","clever-cubs"]){
+     const f=sender({environment:emailSettings});
+     if(emailSettings[business==="grannys"?"VSH_GRANNYS_GMAIL_USER":"VSH_CLEVERCUBS_GMAIL_USER"]!==settings[business].sender){
+       await assert.rejects(f.send(message(business)),/disabled or unconfigured/);
+       assert.deepEqual(f.calls,[]);
+     }
+   }
+ }
+});
+
 test("A forged brand sender, recipient list, header, or mismatched job never creates transport",async()=>{
  const wrong=[
   {brand:"clever-cubs"},
