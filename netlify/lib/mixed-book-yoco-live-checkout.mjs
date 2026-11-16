@@ -30,7 +30,7 @@ function validOrder(master){
        typeof line.title!=="string" || !line.title.trim() ||
        !Number.isSafeInteger(line.priceCents) || line.priceCents<100 ||
        typeof line.pdfPath!=="string" ||
-       !new RegExp("^"+line.business+"/[0-9a-f-]{36}\\\\.(?:pdf|manifest\\\\.json)$","i")
+       !new RegExp("^"+line.business+"/[0-9a-f-]{36}\\.(?:pdf|manifest\\.json)$","i")
          .test(line.pdfPath))
       throw Error("Invalid server-approved LIVE order.");
     const sku=line.business+":"+line.id.toLowerCase();
