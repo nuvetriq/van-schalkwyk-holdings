@@ -103,7 +103,7 @@ test("All LIVE flags, approval, production context and bounded job count are man
 });
 test("Invalid worker result never silently passes as successful email delivery",async()=>{
  for(const item of [
-   null,{status:"paid"},{status:"sent",business:"third-party",kind:"customer-delivery"},
+   {status:"gibberish"},{status:"paid"},{status:"sent",business:"third-party",kind:"customer-delivery"},
    {status:"retry",business:gr,kind:"unknown"}
  ]){
    const x=fixture([item]);
