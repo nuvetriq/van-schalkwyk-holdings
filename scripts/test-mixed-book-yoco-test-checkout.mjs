@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {buildMixedYocoTestCheckout,validateYocoTestCheckoutResponse,
- requestMixedYocoTestCheckout} from "../netlify/lib/mixed-book-yoco-test-checkout.mjs";
+ requestMixedYocoTestCheckout,safeYocoTestRedirectUrl} from "../netlify/lib/mixed-book-yoco-test-checkout.mjs";
 
 const orderId="f3ff94aa-79f3-4de1-b9e2-0f112fe2df56";
 const recipe="ac20bc30-83b6-4fa2-b034-e5129232a210";
@@ -126,4 +126,58 @@ test("Successful redirect is never an order settlement proof",()=>{
  assert.ok(!request.payload.successUrl.includes("paid"));
  assert.equal(Object.hasOwn(request,"paymentVerified"),false);
  assert.equal(Object.hasOwn(request,"sendEmail"),false);
+});
+
+test("Yoco-owned checkout URLs and both DB-supported ID formats are accepted for TEST only",()=>{
+ const valid=[
+   {...good,id:"ch_9LVKD8GnAj7f39DFbn4F16bE",
+     redirectUrl:"https://pay.yoco.com/r/testCheckout98765"},
+   {...good,id:"ch_9LVKD8GnAj7f39DFbn4F16bE",
+     redirectUrl:"https://pay.yoco.com/ch_9LVKD8GnAj7f39DFbn4F16bE"},
+   {...good,id:"checkout_yocoTEST987654",
+     redirectUrl:"https://c.yoco.com/checkout/yocoTEST987654"}
+ ];
+ for(const candidate of valid){
+   const accepted=validateYocoTestCheckoutResponse(master,candidate);
+   assert.equal(accepted.checkoutId,candidate.id);
+   assert.equal(accepted.redirectUrl,candidate.redirectUrl);
+   assert.equal(accepted.processingMode,"test");
+   assert.equal(safeYocoTestRedirectUrl(candidate.redirectUrl),candidate.redirectUrl);
+ }
+ for(const other of [
+   {...valid[0],processingMode:"live"},
+   {...valid[0],amount:1},
+   {...valid[0],currency:"USD"},
+   {...valid[0],externalId:"other"},
+   {...valid[0],metadata:{purpose:"unrelated",orderId}}
+ ])assert.throws(()=>validateYocoTestCheckoutResponse(master,other));
+});
+
+test("Alternate Yoco redirect never allows lookalike domains, encoded paths or URL decorations",()=>{
+ for(const unsafe of [
+   "https://pay.yoco.com.evil.example/r/test123",
+   "https://c.yoco.com.evil.example/checkout/test123",
+   "https://pay.yoco.com@evil.example/r/test123",
+   "https://evil.example@pay.yoco.com/r/test123",
+   "http://pay.yoco.com/r/test123",
+   "https://PAY.YOCO.COM/r/test123",
+   "https://pay.yoco.com/r/test123?origin=bad",
+   "https://pay.yoco.com/r/test123#fragment",
+   "https://pay.yoco.com/r/%2e%2e",
+   "https://pay.yoco.com//r/test123",
+   "https://pay.yoco.com/other/test123",
+   "https://c.yoco.com/checkout/test123/extra",
+   "https://c.yoco.com:8443/checkout/test123",
+   "https://pay.yoco.com/r/abc",
+   "javascript:alert(1)"
+ ]){
+   assert.equal(safeYocoTestRedirectUrl(unsafe),null);
+   assert.throws(()=>validateYocoTestCheckoutResponse(master,
+     {...good,id:"ch_test12345",redirectUrl:unsafe}),
+     error=>error.code==="yoco_response_redirect_invalid");
+ }
+ for(const id of ["ch_", "ch_123", "not-a-checkout-123456",
+   "ch_123;DROP", "checkout_123","https://c.yoco.com/checkout/12345"])
+   assert.throws(()=>validateYocoTestCheckoutResponse(master,
+     {...good,id}),error=>error.code==="yoco_response_id_invalid");
 });
