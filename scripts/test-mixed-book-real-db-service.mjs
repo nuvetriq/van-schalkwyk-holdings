@@ -59,6 +59,15 @@ test("Official Netlify Database pool commits ONE payment with brand-specific sal
       orderId:master.id,checkoutId,amountCents:20000,processingMode:"live"
     });
     assert.equal(bound.duplicate,false);
+    const byCheckout=await service.loadYocoLiveOrderByCheckoutId(checkoutId);
+    assert.equal(byCheckout.id,master.id);
+    assert.equal(byCheckout.checkout_id,checkoutId);
+    assert.equal(byCheckout.processing_mode,"live");
+    assert.equal(byCheckout.status,"awaiting_payment");
+    assert.equal(byCheckout.customer_email,undefined);
+    assert.equal(byCheckout.snapshot,undefined);
+    assert.equal(await service.loadYocoLiveOrderByCheckoutId("checkout_NoSuchOrder456789"),null);
+    assert.equal(await service.loadYocoLiveOrderByCheckoutId("unsafe"),null);
     const paid=await service.settleAfterVerifiedWebhook(master.id,confirmation);
     assert.equal(paid.brandCount,2);
     assert.equal(paid.insertedEmailJobs,4);
