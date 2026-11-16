@@ -109,8 +109,14 @@ export function verifySignedMixedYocoWebhook({
     !Number.isSafeInteger(payment.amount) || payment.amount<100 ||
     payment.currency!=="ZAR")reject();
   const meta=payment.metadata;
-  if(!meta || typeof meta!=="object" || Array.isArray(meta) ||
-    !UUID.test(meta.orderId||""))reject();
+  if(!meta || typeof meta!=="object" || Array.isArray(meta))reject();
+  // Yoco's documented payment notification includes metadata.checkoutId.
+  // Custom orderId metadata is useful when round-tripped, but optional:
+  // resolve by the signed checkout ID against the stored, bound order when
+  // Yoco omits the merchant's custom orderId from its event.
+  const orderId=meta.orderId??null;
+  if(orderId!==null && (typeof orderId!=="string" || !UUID.test(orderId)))
+    reject();
   // Yoco uses "mode" in Checkout-API payment webhooks. We also accept the
   // explicit processingMode shape, but NEVER infer test/live from the key.
   const mode=payment.mode??payment.processingMode;
@@ -121,10 +127,11 @@ export function verifySignedMixedYocoWebhook({
   if(checkoutCandidate!==null && !CHECKOUT_ID.test(checkoutCandidate))reject();
   if(meta.checkoutId && payment.checkoutId &&
      meta.checkoutId!==payment.checkoutId)reject();
+  if(orderId===null && checkoutCandidate===null)reject();
   return {
     ignored:false,eventId,
     signedWebhookId:signature.signedWebhookId,
-    orderId:meta.orderId.toLowerCase(),checkoutCandidate,
+    orderId:orderId?.toLowerCase()??null,checkoutCandidate,
     paymentId:payment.id,amountCents:payment.amount,
     currency:"ZAR",processingMode:mode,
     eventType:"payment.succeeded",paymentStatus:"succeeded"
@@ -140,7 +147,7 @@ export function reconcileSignedYocoEventForOrder(signed,storedOrder,{
   independentlyConfirmedCheckoutId=null
 }={}) {
   if(!signed || signed.ignored!==false || !storedOrder ||
-     signed.orderId!==storedOrder.id ||
+     (signed.orderId!==null && signed.orderId!==storedOrder.id) ||
      signed.currency!=="ZAR" ||
      signed.amountCents!==Number(storedOrder.amount_cents) ||
      signed.processingMode!==storedOrder.processing_mode ||
