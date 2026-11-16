@@ -35,6 +35,9 @@ export function createMixedBookServices(options={}){
     async loadYocoLiveOrder(orderId){
       return reads.loadYocoLiveOrder(orderId);
     },
+    async loadYocoLiveOrderByCheckoutId(checkoutId){
+      return reads.loadYocoLiveOrderByCheckoutId(checkoutId);
+    },
     async loadPaidBrandSale(orderId,business){
       return reads.loadPaidBrandSale(orderId,business);
     },
