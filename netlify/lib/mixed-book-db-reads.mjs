@@ -30,6 +30,17 @@ export function createMixedBookDbReads(pool){
       );
       return result.rows?.[0] ?? null;
     },
+    // Server-only lookup for independently authenticated LIVE webhook flow.
+    // Never return customer identity, mixed snapshots or private PDF paths.
+    async loadYocoLiveOrder(orderId){
+      if(typeof orderId!=="string" || !UUID.test(orderId))return null;
+      const result=await pool.query(
+        `SELECT id,checkout_id,amount_cents,processing_mode,status
+         FROM vsh_mixed_orders WHERE id=$1 AND processing_mode='live'`,
+        [orderId]
+      );
+      return result.rows?.[0] ?? null;
+    },
     async loadPaidBrandSale(orderId,business){
       if(typeof orderId!=="string" || !UUID.test(orderId) ||
          !BRANDS.includes(business))
