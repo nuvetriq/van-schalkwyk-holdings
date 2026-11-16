@@ -70,8 +70,16 @@ export function makeMixedBookYocoLiveWebhookHandler({
 
     // An authenticated subscription can contain unrelated merchant events:
     // avoid database reads and false acknowledgements for other namespaces.
+    const metadata=event.payload?.metadata;
+    const purpose=metadata?.purpose;
+    const checkoutId=metadata?.checkoutId??event.payload?.checkoutId;
+    // Yoco's documented event example includes checkoutId but may omit
+    // merchant metadata.purpose/orderId. A signed checkoutId is sufficient
+    // ONLY if it later resolves to a bound LIVE order in our database.
+    // Explicitly different purpose namespaces must never be processed.
     if(event.type!=="payment.succeeded" ||
-       event.payload?.metadata?.purpose!=="vsh-mixed-book-live")
+       (purpose!==undefined && purpose!=="vsh-mixed-book-live") ||
+       (purpose===undefined && !checkoutId))
       return reply({ok:true,ignored:true},200);
 
     try {
