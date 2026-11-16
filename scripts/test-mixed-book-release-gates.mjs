@@ -160,8 +160,29 @@ test("No actual production checkout or payment webhook is reachable from the new
     const page=read(file);
     assert.doesNotMatch(page,/mixed-book-yoco-test-(?:checkout|webhook)/);
   }
-  // The LIVE checkout HTTP endpoint remains entirely absent.
-  assert.ok(!existsSync("netlify/functions/mixed-book-yoco-live-checkout.mjs"));
+  // The LIVE checkout endpoint remains DENY-BY-DEFAULT, requires explicit
+  // public release approval plus the entire webhook, email, private-download
+  // and secure brand mailbox stack, and is absent from the public cart JS.
+  const liveCheckout=read("netlify/functions/mixed-book-yoco-live-checkout.mjs");
+  for(const name of [
+    "VSH_MIXED_BOOK_PUBLIC_CHECKOUT_ENABLED",
+    "VSH_MIXED_BOOK_DB_ENABLED",
+    "VSH_MIXED_YOCO_LIVE_ENABLED",
+    "VSH_ENABLE_PAYMENTS",
+    "VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED",
+    "VSH_MIXED_BOOK_EMAIL_ENABLED",
+    "VSH_MIXED_BOOK_DOWNLOADS_ENABLED",
+    "VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET",
+    "VSH_MIXED_BOOK_LINK_KEY"
+  ])assert.match(liveCheckout,new RegExp(name));
+  assert.match(liveCheckout,/VSH_MIXED_YOCO_TEST_ENABLED/);
+  assert.match(liveCheckout,/rateLimit/);
+  assert.match(liveCheckout,/windowLimit:3/);
+  assert.match(liveCheckout,/request.headers.get\("origin"\)/);
+  assert.match(liveCheckout,/safeCheckoutDiagnostic/);
+  assert.match(liveCheckout,/prepareMixedBookLiveCheckout/);
+  assert.match(liveCheckout,/postYocoLiveCheckout/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_PUBLIC_CHECKOUT_ENABLED/);
 
   // A separately signed LIVE webhook may be deployed only when DENY-BY-DEFAULT.
   // Retain explicit owner activation requirements, and never leak the webhook
@@ -178,5 +199,7 @@ test("No actual production checkout or payment webhook is reachable from the new
   for(const file of ["dist/grannys-little-bakery.html",
     "dist/clever-cubs-learning.html","dist/assets/shared-book-cart.js"]){
     assert.doesNotMatch(read(file),/mixed-book-yoco-live-(?:checkout|webhook)/);
+    assert.doesNotMatch(read(file),/\/api\/books\/live-checkout/);
   }
+  assert.match(read("dist/assets/shared-book-cart.js"),/checkout.disabled=true/);
 });
