@@ -137,10 +137,16 @@ test("All feature flags, both secrets, context and explicit approval required BE
    {enabled:true,operatorApproved:true,context:{deploy:{context:"deploy-preview"}}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_ENABLE_PAYMENTS:"false"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_EMAIL_ENABLED:"false"}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_YOCO_LIVE_ENABLED:"false"}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_YOCO_TEST_ENABLED:"true"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_DB_ENABLED:"false"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"false"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_MIXED_BOOK_LINK_KEY:"invalid"}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:""}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_GRANNYS_GMAIL_USER:"learningclevercubs@gmail.com"}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_CLEVERCUBS_GMAIL_USER:"grannyspopsandtreats@gmail.com"}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_GRANNYS_GMAIL_USER:""}},
+   {enabled:true,operatorApproved:true,environment:{...env,VSH_CLEVERCUBS_GMAIL_USER:""}},
    {enabled:true,operatorApproved:true,environment:{...env,VSH_GRANNYS_GMAIL_APP_PASSWORD:"injected\nheader"}}
  ];
  for(const variant of proposals){
