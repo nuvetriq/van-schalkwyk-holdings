@@ -164,7 +164,7 @@ test("No actual production checkout or payment webhook is reachable from the new
   assert.match(liveWebhook,/VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET/);
   assert.match(liveWebhook,/verifyMixedYocoWebhookEnvelope/);
   assert.match(liveWebhook,/context=== "production"|context==="production"/);
-  assert.doesNotMatch(site,/^\\s*VSH_(?:MIXED_YOCO_LIVE_ENABLED|ENABLE_PAYMENTS)\\s*=/m);
+  assert.doesNotMatch(site,/^\s*VSH_(?:MIXED_YOCO_LIVE_ENABLED|ENABLE_PAYMENTS)\s*=/m);
   for(const file of ["dist/grannys-little-bakery.html",
     "dist/clever-cubs-learning.html","dist/assets/shared-book-cart.js"]){
     assert.doesNotMatch(read(file),/mixed-book-yoco-live-(?:checkout|webhook)/);
