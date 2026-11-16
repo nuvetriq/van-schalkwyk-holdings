@@ -43,6 +43,11 @@ jobs:
         run: npm run build
       - name: Test shared cart state, cross-shop markup, no payment
         run: node --test scripts/test-shared-book-cart.mjs
+      - name: Verify unlaunched customer checkout form, SKU-only request and safe Yoco redirect
+        run: |
+          node --check assets/shared-book-checkout-core.js
+          node --check assets/shared-book-cart.js
+          node --test scripts/test-shared-book-checkout-core.mjs
       - name: Test mixed-brand master checkout snapshot and isolated sales
         run: node --test scripts/test-mixed-book-order.mjs
       - name: Test post-payment brand email routing and no-send sandbox
