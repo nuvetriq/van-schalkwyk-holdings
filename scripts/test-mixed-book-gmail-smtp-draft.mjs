@@ -14,9 +14,13 @@ const env={
   VSH_MIXED_BOOK_EMAIL_ENABLED:"true",
   VSH_MIXED_BOOK_DB_ENABLED:"true",
   VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"true",
+  VSH_MIXED_YOCO_LIVE_ENABLED:"true",
+  VSH_MIXED_YOCO_TEST_ENABLED:"false",
   VSH_ENABLE_PAYMENTS:"true",
-  VSH_GRANNYS_SMTP_APP_PASSWORD:"a".repeat(16),
-  VSH_CLEVERCUBS_SMTP_APP_PASSWORD:"b".repeat(16)
+  VSH_GRANNYS_GMAIL_USER:"grannyspopsandtreats@gmail.com",
+  VSH_GRANNYS_GMAIL_APP_PASSWORD:"a".repeat(16),
+  VSH_CLEVERCUBS_GMAIL_USER:"learningclevercubs@gmail.com",
+  VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:"b".repeat(16)
 };
 const context={deploy:{context:"production"}};
 const settings={
@@ -125,7 +129,7 @@ test("No credential or network access when feature is disabled",async()=>{
 });
 test("Missing, weak or newline-injected brand passwords are denied before SMTP",async()=>{
  for(const value of ["","short","a".repeat(15),"a".repeat(16)+"\n","invalid@password".repeat(2)]){
-   const f=sender({environment:{...env,VSH_GRANNYS_SMTP_APP_PASSWORD:value}});
+   const f=sender({environment:{...env,VSH_GRANNYS_GMAIL_APP_PASSWORD:value}});
    await assert.rejects(f.send(message("grannys")) ,/disabled or unconfigured/);
    assert.deepEqual(f.calls,[]);
  }
@@ -173,7 +177,7 @@ test("Nodemailer supports offline JSON transport without Gmail network access",a
  assert.equal(serialized.from.address,"grannyspopsandtreats@gmail.com");
  assert.equal((Array.isArray(serialized.to)?serialized.to[0]:serialized.to).address,"buyer@example.invalid");
  assert.equal(serialized.messageId,fakeSend.messageId);
- assert.ok(!JSON.stringify(serialized).includes(env.VSH_GRANNYS_SMTP_APP_PASSWORD));
+ assert.ok(!JSON.stringify(serialized).includes(env.VSH_GRANNYS_GMAIL_APP_PASSWORD));
 });
 test("SMTP is imported only by draft helper; no sending function or Netlify config activates it",async()=>{
  const source=await readFile("netlify/lib/mixed-book-gmail-smtp-draft.mjs","utf8");
