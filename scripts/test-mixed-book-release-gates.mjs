@@ -150,6 +150,23 @@ test("No actual production checkout or payment webhook is reachable from the new
     const page=read(file);
     assert.doesNotMatch(page,/mixed-book-yoco-test-(?:checkout|webhook)/);
   }
+  // The LIVE checkout HTTP endpoint remains entirely absent.
   assert.ok(!existsSync("netlify/functions/mixed-book-yoco-live-checkout.mjs"));
-  assert.ok(!existsSync("netlify/functions/mixed-book-yoco-live-webhook.mjs"));
+
+  // A separately signed LIVE webhook may be deployed only when DENY-BY-DEFAULT.
+  // Retain explicit owner activation requirements, and never leak the webhook
+  // endpoint into a customer-facing public page or checkout interface.
+  const liveWebhook=read("netlify/functions/mixed-book-yoco-live-webhook.mjs");
+  assert.match(liveWebhook,/VSH_MIXED_BOOK_DB_ENABLED==="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_LIVE_ENABLED==="true"/);
+  assert.match(liveWebhook,/VSH_ENABLE_PAYMENTS==="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_TEST_ENABLED!=="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET/);
+  assert.match(liveWebhook,/verifyMixedYocoWebhookEnvelope/);
+  assert.match(liveWebhook,/context=== "production"|context==="production"/);
+  assert.doesNotMatch(site,/^\\s*VSH_(?:MIXED_YOCO_LIVE_ENABLED|ENABLE_PAYMENTS)\\s*=/m);
+  for(const file of ["dist/grannys-little-bakery.html",
+    "dist/clever-cubs-learning.html","dist/assets/shared-book-cart.js"]){
+    assert.doesNotMatch(read(file),/mixed-book-yoco-live-(?:checkout|webhook)/);
+  }
 });
