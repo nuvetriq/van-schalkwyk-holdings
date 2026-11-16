@@ -82,6 +82,8 @@ export function makeMixedBookYocoLiveWebhookHandler({
         secret:env.VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET,
         nowMs:now(),
         loadStoredOrder:id=>ledger.loadYocoLiveOrder(id),
+        loadStoredOrderByCheckoutId:id=>
+          ledger.loadYocoLiveOrderByCheckoutId(id),
         settleAfterVerifiedWebhook:(id,verified)=>
           ledger.settleAfterVerifiedWebhook(id,verified)
       });
