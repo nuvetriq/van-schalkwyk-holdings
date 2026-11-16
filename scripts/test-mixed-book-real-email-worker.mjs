@@ -22,10 +22,14 @@ const env={
  VSH_MIXED_BOOK_DB_ENABLED:"true",
  VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"true",
  VSH_MIXED_BOOK_EMAIL_ENABLED:"true",
+ VSH_MIXED_YOCO_LIVE_ENABLED:"true",
+ VSH_MIXED_YOCO_TEST_ENABLED:"false",
  VSH_ENABLE_PAYMENTS:"true",
  VSH_MIXED_BOOK_LINK_KEY:linkKey,
- VSH_GRANNYS_SMTP_APP_PASSWORD:"a".repeat(16),
- VSH_CLEVERCUBS_SMTP_APP_PASSWORD:"b".repeat(16)
+ VSH_GRANNYS_GMAIL_USER:"grannyspopsandtreats@gmail.com",
+ VSH_GRANNYS_GMAIL_APP_PASSWORD:"a".repeat(16),
+ VSH_CLEVERCUBS_GMAIL_USER:"learningclevercubs@gmail.com",
+ VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:"b".repeat(16)
 };
 const brandIds={
  grannys:"f3ff94aa-79f3-4de1-b9e2-0f112fe2df56",
