@@ -79,6 +79,10 @@ jobs:
           node --check netlify/lib/mixed-book-yoco-live-operation.mjs
           node --check netlify/lib/mixed-book-yoco-live-payment-handoff.mjs
           node --test scripts/test-mixed-book-yoco-live-foundation.mjs
+      - name: Verify fail-closed LIVE Yoco webhook HTTP route and HMAC authentication
+        run: |
+          node --check netlify/functions/mixed-book-yoco-live-webhook.mjs
+          node --test scripts/test-mixed-book-yoco-live-webhook-http.mjs
       - name: Verify signed Yoco Checkout webhooks and independent checkout reconciliation
         run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
       - name: Verify one Yoco TEST charge and safe checkout redirect
