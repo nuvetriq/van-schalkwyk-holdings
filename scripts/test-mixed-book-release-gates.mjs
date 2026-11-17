@@ -55,7 +55,7 @@ test("Production build stays public-only without leaked customer PDF or SQL serv
     assert.doesNotMatch(content,/sk_(?:live|test)_[A-Za-z0-9_-]{15,}/);
     assert.doesNotMatch(content,/whsec_[A-Za-z0-9+/]{15,}/);
     assert.doesNotMatch(content,/vshlk_[A-Za-z0-9+/]{43}=/);
-    assert.doesNotMatch(content,/VSH_(?:GRANNYS|CLEVERCUBS)_SMTP_APP_PASSWORD/);
+    assert.doesNotMatch(content,/VSH_(?:GRANNYS|CLEVERCUBS)_(?:GMAIL|SMTP)_APP_PASSWORD/);
     assert.doesNotMatch(content,/nodemailer/);
 
     assert.doesNotMatch(content,/postgres(?:ql)?:\/\/[^ \n"'<>]+/i);
@@ -128,6 +128,16 @@ test("Both Yoco endpoints are disabled until explicit test flags and database se
 
   }
 
+  const deliveryScheduler=read("netlify/functions/mixed-book-live-email-scheduler.mjs");
+  assert.match(deliveryScheduler,/VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_YOCO_LIVE_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_YOCO_TEST_ENABLED/);
+  assert.match(deliveryScheduler,/VSH_MIXED_BOOK_LINK_KEY/);
+  assert.ok(deliveryScheduler.includes('context?.deploy?.context!=="production"'));
+  assert.match(deliveryScheduler,/maxJobs:1/);
+  assert.ok(deliveryScheduler.includes('schedule:"*/5 * * * *"'));
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED/);
+  assert.doesNotMatch(deliveryScheduler,/X-Admin-Key|Bearer sk_live/);
   assert.doesNotMatch(statusPage,/payments\.yoco\.com/);
 });
 test("No checkout function added to public cart or Netlify config enables payments",()=>{
@@ -150,6 +160,46 @@ test("No actual production checkout or payment webhook is reachable from the new
     const page=read(file);
     assert.doesNotMatch(page,/mixed-book-yoco-test-(?:checkout|webhook)/);
   }
-  assert.ok(!existsSync("netlify/functions/mixed-book-yoco-live-checkout.mjs"));
-  assert.ok(!existsSync("netlify/functions/mixed-book-yoco-live-webhook.mjs"));
+  // The LIVE checkout endpoint remains DENY-BY-DEFAULT, requires explicit
+  // public release approval plus the entire webhook, email, private-download
+  // and secure brand mailbox stack, and is absent from the public cart JS.
+  const liveCheckout=read("netlify/functions/mixed-book-yoco-live-checkout.mjs");
+  for(const name of [
+    "VSH_MIXED_BOOK_PUBLIC_CHECKOUT_ENABLED",
+    "VSH_MIXED_BOOK_DB_ENABLED",
+    "VSH_MIXED_YOCO_LIVE_ENABLED",
+    "VSH_ENABLE_PAYMENTS",
+    "VSH_MIXED_BOOK_EMAIL_RUNNER_ENABLED",
+    "VSH_MIXED_BOOK_EMAIL_ENABLED",
+    "VSH_MIXED_BOOK_DOWNLOADS_ENABLED",
+    "VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET",
+    "VSH_MIXED_BOOK_LINK_KEY"
+  ])assert.match(liveCheckout,new RegExp(name));
+  assert.match(liveCheckout,/VSH_MIXED_YOCO_TEST_ENABLED/);
+  assert.match(liveCheckout,/rateLimit/);
+  assert.match(liveCheckout,/windowLimit:3/);
+  assert.match(liveCheckout,/request.headers.get\("origin"\)/);
+  assert.match(liveCheckout,/safeCheckoutDiagnostic/);
+  assert.match(liveCheckout,/prepareMixedBookLiveCheckout/);
+  assert.match(liveCheckout,/postYocoLiveCheckout/);
+  assert.doesNotMatch(site,/VSH_MIXED_BOOK_PUBLIC_CHECKOUT_ENABLED/);
+
+  // A separately signed LIVE webhook may be deployed only when DENY-BY-DEFAULT.
+  // Retain explicit owner activation requirements, and never leak the webhook
+  // endpoint into a customer-facing public page or checkout interface.
+  const liveWebhook=read("netlify/functions/mixed-book-yoco-live-webhook.mjs");
+  assert.match(liveWebhook,/VSH_MIXED_BOOK_DB_ENABLED==="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_LIVE_ENABLED==="true"/);
+  assert.match(liveWebhook,/VSH_ENABLE_PAYMENTS==="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_TEST_ENABLED!=="true"/);
+  assert.match(liveWebhook,/VSH_MIXED_YOCO_LIVE_WEBHOOK_SECRET/);
+  assert.match(liveWebhook,/verifyMixedYocoWebhookEnvelope/);
+  assert.match(liveWebhook,/context=== "production"|context==="production"/);
+  assert.doesNotMatch(site,/^\s*VSH_(?:MIXED_YOCO_LIVE_ENABLED|ENABLE_PAYMENTS)\s*=/m);
+  for(const file of ["dist/grannys-little-bakery.html",
+    "dist/clever-cubs-learning.html","dist/assets/shared-book-cart.js"]){
+    assert.doesNotMatch(read(file),/mixed-book-yoco-live-(?:checkout|webhook)/);
+    assert.doesNotMatch(read(file),/\/api\/books\/live-checkout/);
+  }
+  assert.match(read("dist/assets/shared-book-cart.js"),/checkout.disabled=true/);
 });

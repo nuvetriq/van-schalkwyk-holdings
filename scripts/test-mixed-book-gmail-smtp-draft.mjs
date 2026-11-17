@@ -14,9 +14,13 @@ const env={
   VSH_MIXED_BOOK_EMAIL_ENABLED:"true",
   VSH_MIXED_BOOK_DB_ENABLED:"true",
   VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"true",
+  VSH_MIXED_YOCO_LIVE_ENABLED:"true",
+  VSH_MIXED_YOCO_TEST_ENABLED:"false",
   VSH_ENABLE_PAYMENTS:"true",
-  VSH_GRANNYS_SMTP_APP_PASSWORD:"a".repeat(16),
-  VSH_CLEVERCUBS_SMTP_APP_PASSWORD:"b".repeat(16)
+  VSH_GRANNYS_GMAIL_USER:"grannyspopsandtreats@gmail.com",
+  VSH_GRANNYS_GMAIL_APP_PASSWORD:"a".repeat(16),
+  VSH_CLEVERCUBS_GMAIL_USER:"learningclevercubs@gmail.com",
+  VSH_CLEVERCUBS_GMAIL_APP_PASSWORD:"b".repeat(16)
 };
 const context={deploy:{context:"production"}};
 const settings={
@@ -110,6 +114,8 @@ test("No credential or network access when feature is disabled",async()=>{
   {enabled:false,environment:env,deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_EMAIL_ENABLED:"false"},deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_DB_ENABLED:"false"},deploy:context},
+  {enabled:true,environment:{...env,VSH_MIXED_YOCO_LIVE_ENABLED:"false"},deploy:context},
+  {enabled:true,environment:{...env,VSH_MIXED_YOCO_TEST_ENABLED:"true"},deploy:context},
   {enabled:true,environment:{...env,VSH_MIXED_BOOK_DOWNLOADS_ENABLED:"false"},deploy:context},
   {enabled:true,environment:{...env,VSH_ENABLE_PAYMENTS:"false"},deploy:context},
   {enabled:true,environment:env,deploy:{deploy:{context:"deploy-preview"}}},
@@ -125,11 +131,28 @@ test("No credential or network access when feature is disabled",async()=>{
 });
 test("Missing, weak or newline-injected brand passwords are denied before SMTP",async()=>{
  for(const value of ["","short","a".repeat(15),"a".repeat(16)+"\n","invalid@password".repeat(2)]){
-   const f=sender({environment:{...env,VSH_GRANNYS_SMTP_APP_PASSWORD:value}});
+   const f=sender({environment:{...env,VSH_GRANNYS_GMAIL_APP_PASSWORD:value}});
    await assert.rejects(f.send(message("grannys")) ,/disabled or unconfigured/);
    assert.deepEqual(f.calls,[]);
  }
 });
+test("Brand Gmail identity mismatch never creates SMTP transport",async()=>{
+ for(const emailSettings of [
+  {...env,VSH_GRANNYS_GMAIL_USER:"learningclevercubs@gmail.com"},
+  {...env,VSH_CLEVERCUBS_GMAIL_USER:"grannyspopsandtreats@gmail.com"},
+  {...env,VSH_GRANNYS_GMAIL_USER:""},
+  {...env,VSH_CLEVERCUBS_GMAIL_USER:""}
+ ]){
+   for(const business of ["grannys","clever-cubs"]){
+     const f=sender({environment:emailSettings});
+     if(emailSettings[business==="grannys"?"VSH_GRANNYS_GMAIL_USER":"VSH_CLEVERCUBS_GMAIL_USER"]!==settings[business].sender){
+       await assert.rejects(f.send(message(business)),/disabled or unconfigured/);
+       assert.deepEqual(f.calls,[]);
+     }
+   }
+ }
+});
+
 test("A forged brand sender, recipient list, header, or mismatched job never creates transport",async()=>{
  const wrong=[
   {brand:"clever-cubs"},
@@ -173,7 +196,7 @@ test("Nodemailer supports offline JSON transport without Gmail network access",a
  assert.equal(serialized.from.address,"grannyspopsandtreats@gmail.com");
  assert.equal((Array.isArray(serialized.to)?serialized.to[0]:serialized.to).address,"buyer@example.invalid");
  assert.equal(serialized.messageId,fakeSend.messageId);
- assert.ok(!JSON.stringify(serialized).includes(env.VSH_GRANNYS_SMTP_APP_PASSWORD));
+ assert.ok(!JSON.stringify(serialized).includes(env.VSH_GRANNYS_GMAIL_APP_PASSWORD));
 });
 test("SMTP is imported only by draft helper; no sending function or Netlify config activates it",async()=>{
  const source=await readFile("netlify/lib/mixed-book-gmail-smtp-draft.mjs","utf8");

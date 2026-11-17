@@ -7,6 +7,7 @@ on:
       - feature/mixed-book-code-review-20261102
       - feature/admin-yoco-test-tool-20261111
       - feature/yoco-test-checkout-diagnostics-20261112
+      - feature/live-yoco-server-foundation-20261116
       - release/preview-mixed-book-schema-20261102
   workflow_dispatch:
 
@@ -42,6 +43,11 @@ jobs:
         run: npm run build
       - name: Test shared cart state, cross-shop markup, no payment
         run: node --test scripts/test-shared-book-cart.mjs
+      - name: Verify unlaunched customer checkout form, SKU-only request and safe Yoco redirect
+        run: |
+          node --check assets/shared-book-checkout-core.js
+          node --check assets/shared-book-cart.js
+          node --test scripts/test-shared-book-checkout-core.mjs
       - name: Test mixed-brand master checkout snapshot and isolated sales
         run: node --test scripts/test-mixed-book-order.mjs
       - name: Test post-payment brand email routing and no-send sandbox
@@ -72,6 +78,20 @@ jobs:
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
         run: node --test scripts/test-mixed-book-real-db-service.mjs
+      - name: Verify disabled LIVE Yoco checkout foundation and signed payment safeguards
+        run: |
+          node --check netlify/lib/mixed-book-yoco-live-checkout.mjs
+          node --check netlify/lib/mixed-book-yoco-live-operation.mjs
+          node --check netlify/lib/mixed-book-yoco-live-payment-handoff.mjs
+          node --test scripts/test-mixed-book-yoco-live-foundation.mjs
+      - name: Verify customer LIVE checkout HTTP remains disabled and origin-safe
+        run: |
+          node --check netlify/functions/mixed-book-yoco-live-checkout.mjs
+          node --test scripts/test-mixed-book-yoco-live-checkout-endpoint.mjs
+      - name: Verify fail-closed LIVE Yoco webhook HTTP route and HMAC authentication
+        run: |
+          node --check netlify/functions/mixed-book-yoco-live-webhook.mjs
+          node --test scripts/test-mixed-book-yoco-live-webhook-http.mjs
       - name: Verify signed Yoco Checkout webhooks and independent checkout reconciliation
         run: node --test scripts/test-mixed-book-yoco-webhook-verify.mjs
       - name: Verify one Yoco TEST charge and safe checkout redirect
@@ -93,6 +113,10 @@ jobs:
           node --test scripts/test-yoco-test-checkout-diagnostics.mjs
       - name: Verify signed Yoco TEST webhook HTTP route and no-send guards
         run: node --test scripts/test-mixed-book-yoco-test-webhook-http.mjs
+      - name: Verify official LIVE Yoco signed checkout-only event through disposable PostgreSQL
+        env:
+          CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
+        run: node --test scripts/test-mixed-book-yoco-live-real-db-webhook.mjs
       - name: Verify signed Yoco TEST webhook end to end against real temporary PostgreSQL
         env:
           CI_DATABASE_URL: postgresql://ci_test:ci-local-only-not-a-real-secret@127.0.0.1:5432/vsh_bookshop_ci
@@ -119,6 +143,14 @@ jobs:
         run: node --test scripts/test-mixed-book-real-paid-grants.mjs
       - name: Verify secure brand SMTP sender and offline Nodemailer JSON transport
         run: node --test scripts/test-mixed-book-gmail-smtp-draft.mjs
+      - name: Verify LIVE branded-email scheduler requires explicit operator release
+        run: |
+          node --check netlify/functions/mixed-book-live-email-scheduler.mjs
+          node --test scripts/test-mixed-book-live-email-scheduler.mjs
+      - name: Verify safe bounded LIVE branded email batch remains untriggered
+        run: |
+          node --check netlify/lib/mixed-book-live-email-batch.mjs
+          node --test scripts/test-mixed-book-live-email-batch.mjs
       - name: Verify disabled email worker connects paid-live SQL reads to separate Gmail transports
         run: node --test scripts/test-mixed-book-email-worker-draft.mjs
       - name: Verify synthetic paid mixed order through SQL and simulated brand delivery

@@ -108,6 +108,29 @@ test("Only explicit successful payment can become a settlement candidate",()=>{
  const refund=verifySignedMixedYocoWebhook(signed(event({type:"refund.succeeded"})));
  assert.equal(refund.ignored,true);
 });
+test("Official Yoco-style payment with checkoutId but NO custom orderId reconciles against bound order",()=>{
+ const signedPayment=verifySignedMixedYocoWebhook(signed(event({
+   metadata:{checkoutId}
+ })));
+ assert.equal(signedPayment.orderId,null);
+ assert.equal(signedPayment.checkoutCandidate,checkoutId);
+ const reconciled=reconcileSignedYocoEventForOrder(signedPayment,stored);
+ assert.equal(reconciled.ready,true);
+ assert.equal(reconciled.confirmation.checkoutId,checkoutId);
+ for(const patch of [
+   {checkout_id:"checkout_OtherPayment12345"},
+   {amount_cents:1},
+   {processing_mode:"live"}
+ ])assert.throws(()=>reconcileSignedYocoEventForOrder(signedPayment,{
+   ...stored,...patch
+ }));
+});
+test("No order reference AND no checkout ID never authorises payment",()=>{
+ assert.throws(()=>verifySignedMixedYocoWebhook(signed(event({
+   metadata:{purpose:"vsh-mixed-book-live"}
+ }))));
+});
+
 test("A valid signed orderId without checkoutId cannot settle until independently reconciled",()=>{
  const output=verifySignedMixedYocoWebhook(signed(event({
    metadata:{orderId}

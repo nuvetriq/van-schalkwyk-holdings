@@ -18,9 +18,15 @@ const HOST="smtp.gmail.com";
 const MAX_MESSAGE=48_000;
 const MAIL=/^[^\s@<>,;\r\n]+@[^\s@<>,;\r\n]+\.[^\s@<>,;\r\n]+$/;
 const jobId=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:(?:grannys|clever-cubs):(?:customer-delivery|merchant-sale-notice)$/i;
-const secrets=Object.freeze({
-  "grannys":"VSH_GRANNYS_SMTP_APP_PASSWORD",
-  "clever-cubs":"VSH_CLEVERCUBS_SMTP_APP_PASSWORD"
+// Reuse the existing production Netlify Gmail credentials for both brands.
+// Never let a worker substitute the other brand's mailbox or password.
+const credentials=Object.freeze({
+  grannys:Object.freeze({
+    user:"VSH_GRANNYS_GMAIL_USER",password:"VSH_GRANNYS_GMAIL_APP_PASSWORD"
+  }),
+  "clever-cubs":Object.freeze({
+    user:"VSH_CLEVERCUBS_GMAIL_USER",password:"VSH_CLEVERCUBS_GMAIL_APP_PASSWORD"
+  })
 });
 function fail(){throw Error("Branded SMTP delivery is disabled or unconfigured.");}
 function approved(env,context){
@@ -28,10 +34,19 @@ function approved(env,context){
     env?.VSH_MIXED_BOOK_EMAIL_ENABLED==="true" &&
     env?.VSH_MIXED_BOOK_DB_ENABLED==="true" &&
     env?.VSH_MIXED_BOOK_DOWNLOADS_ENABLED==="true" &&
+    env?.VSH_MIXED_YOCO_LIVE_ENABLED==="true" &&
+    env?.VSH_MIXED_YOCO_TEST_ENABLED!=="true" &&
     env?.VSH_ENABLE_PAYMENTS==="true";
 }
 function password(env,business) {
-  const raw=env[secrets[business]];
+  const expected=BRAND_EMAILS[business]?.sender;
+  const config=credentials[business];
+  // A stored credential must belong to the sender's exact approved inbox.
+  // Never fall back to the other brand, a generic SMTP identity or a
+  // legacy YOCO secret if an account configuration is missing.
+  if(typeof expected!=="string" || !config ||
+     env[config.user]!==expected)fail();
+  const raw=env[config.password];
   if(typeof raw!=="string" || /[\r\n\t]/.test(raw))fail();
   // Google may display four groups of four app-password characters.
   const normalized=raw.trim().replaceAll(" ","");
